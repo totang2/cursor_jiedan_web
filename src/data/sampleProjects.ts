@@ -1,0 +1,65 @@
+export const sampleProjects = [
+  {
+    id: '1',
+    title: '电商网站开发',
+    description: '需要开发一个现代化的电商网站，包含用户认证、商品管理、购物车、支付系统等功能。要求使用React和Node.js技术栈。',
+    budget: 50000,
+    status: 'OPEN' as const,
+    skills: [
+      { name: 'React' },
+      { name: 'Node.js' },
+      { name: 'MongoDB' },
+      { name: 'TypeScript' },
+    ],
+  },
+  {
+    id: '2',
+    title: '移动应用UI设计',
+    description: '为健康追踪应用设计用户界面，需要符合Material Design规范，注重用户体验和可访问性。',
+    budget: 30000,
+    status: 'IN_PROGRESS' as const,
+    skills: [
+      { name: 'UI设计' },
+      { name: 'Figma' },
+      { name: '用户体验' },
+    ],
+  },
+  {
+    id: '3',
+    title: '数据分析平台',
+    description: '开发一个企业级数据分析平台，支持多数据源接入、数据可视化、报表生成等功能。',
+    budget: 80000,
+    status: 'OPEN' as const,
+    skills: [
+      { name: 'Python' },
+      { name: '数据可视化' },
+      { name: 'SQL' },
+      { name: '大数据' },
+    ],
+  },
+  {
+    id: '4',
+    title: '社交媒体营销网站',
+    description: '为营销机构开发一个展示案例和服务的网站，需要良好的SEO优化和响应式设计。',
+    budget: 25000,
+    status: 'COMPLETED' as const,
+    skills: [
+      { name: 'WordPress' },
+      { name: 'SEO' },
+      { name: '响应式设计' },
+    ],
+  },
+  {
+    id: '5',
+    title: '在线教育平台',
+    description: '开发一个支持直播课程、录播课程、作业管理的在线教育平台。需要支持大规模并发用户。',
+    budget: 100000,
+    status: 'IN_PROGRESS' as const,
+    skills: [
+      { name: '视频流' },
+      { name: 'WebRTC' },
+      { name: '微服务' },
+      { name: 'Docker' },
+    ],
+  },
+]; 
