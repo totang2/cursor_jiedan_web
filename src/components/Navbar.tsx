@@ -59,18 +59,13 @@ export default function Navbar() {
 
   const handleLogout = () => {
     try {
-      // 调用 store 中的 logout 方法清除用户状态
       logout();
-      
-      // 显示成功提示
       toast({
         title: '已退出登录',
         status: 'success',
         duration: 2000,
         isClosable: true,
       });
-
-      // 重定向到登录页面
       router.push('/login');
     } catch (error) {
       toast({
@@ -95,11 +90,15 @@ export default function Navbar() {
             onClick={isOpen ? onClose : onOpen}
           />
           <HStack spacing={8} alignItems={'center'}>
-            <Link href="/" passHref>
-              <Box as="a" fontWeight="bold" fontSize="xl" cursor="pointer">
-                DevMarketplace
-              </Box>
-            </Link>
+            <Box 
+              as={Link} 
+              href="/" 
+              fontWeight="bold" 
+              fontSize="xl" 
+              _hover={{ textDecoration: 'none' }}
+            >
+              DevMarketplace
+            </Box>
             <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
               {Links.map((link) => (
                 <NavLink key={link.name} href={link.href}>{link.name}</NavLink>
@@ -128,16 +127,12 @@ export default function Navbar() {
                   </HStack>
                 </MenuButton>
                 <MenuList>
-                  <Link href="/profile" passHref>
-                    <MenuItem as="a">
-                      个人资料
-                    </MenuItem>
-                  </Link>
-                  <Link href="/projects/my" passHref>
-                    <MenuItem as="a">
-                      我的项目
-                    </MenuItem>
-                  </Link>
+                  <MenuItem as={Link} href="/profile">
+                    个人资料
+                  </MenuItem>
+                  <MenuItem as={Link} href="/projects/my">
+                    我的项目
+                  </MenuItem>
                   <MenuItem
                     onClick={handleLogout}
                     color="red.500"
