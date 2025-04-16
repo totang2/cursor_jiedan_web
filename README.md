@@ -26,7 +26,7 @@
 
 1. 克隆项目
 ```bash
-git clone https://github.com/yourusername/dev-marketplace.git
+git clone https://github.com/totang2/dev-marketplace.git
 cd dev-marketplace
 ```
 

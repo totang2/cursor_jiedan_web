@@ -1,8 +1,26 @@
 'use client';
 
-import { Box, Container, Heading, Text, SimpleGrid, VStack, Badge, HStack, Link as ChakraLink } from '@chakra-ui/react';
-import { sampleProjects } from '@/data/sampleProjects';
+import { Box, Container, Heading, Text, SimpleGrid, VStack, Badge, HStack, Link as ChakraLink, Spinner, Avatar, Divider, Button } from '@chakra-ui/react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
+  skills: string[];
+  createdAt: string;
+  client?: {
+    name?: string;
+    profile?: {
+      avatar?: string;
+    };
+  };
+}
 
 const statusColorScheme = {
   OPEN: 'green',
@@ -17,18 +35,78 @@ const statusLabels = {
 } as const;
 
 export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const { data: session } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await fetch('/api/projects');
+        if (!response.ok) {
+          throw new Error('获取项目列表失败');
+        }
+        const data = await response.json();
+        setProjects(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : '获取项目列表失败');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  if (loading) {
+    return (
+      <Container maxW="container.xl" py={8} centerContent>
+        <Spinner size="xl" />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container maxW="container.xl" py={8}>
+        <Text color="red.500">{error}</Text>
+      </Container>
+    );
+  }
+
   return (
     <Container maxW="container.xl" py={8}>
       <VStack spacing={8} align="stretch">
         <Box>
-          <Heading size="xl" mb={4}>项目列表</Heading>
+          <HStack justify="space-between" align="center" mb={4}>
+            <Heading size="xl">项目列表</Heading>
+            {session ? (
+              <Button
+                colorScheme="blue"
+                size="lg"
+                onClick={() => router.push('/projects/new')}
+              >
+                发布项目
+              </Button>
+            ) : (
+              <Button
+                colorScheme="blue"
+                size="lg"
+                onClick={() => router.push('/login')}
+              >
+                登录后发布
+              </Button>
+            )}
+          </HStack>
           <Text color="gray.600" fontSize="lg">
             浏览所有可用的项目，找到适合你的机会
           </Text>
         </Box>
 
         <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-          {sampleProjects.map((project) => (
+          {projects.map((project) => (
             <Link key={project.id} href={`/projects/${project.id}`} passHref legacyBehavior>
               <ChakraLink
                 _hover={{ textDecoration: 'none' }}
@@ -51,17 +129,33 @@ export default function ProjectsPage() {
                       {project.description}
                     </Text>
                     <Text fontWeight="bold" color="blue.600">
-                      预算: ¥{project.budget.toLocaleString()}
+                      预算: ¥{typeof project.budget === 'number' ? project.budget.toLocaleString() : '0'}
                     </Text>
                     <HStack spacing={2} flexWrap="wrap">
-                      {project.skills.slice(0, 3).map((skill) => (
-                        <Badge key={skill.name} colorScheme="purple">
-                          {skill.name}
+                      {project.skills?.slice(0, 3).map((skill) => (
+                        <Badge key={skill} colorScheme="purple">
+                          {skill}
                         </Badge>
                       ))}
-                      {project.skills.length > 3 && (
+                      {project.skills?.length > 3 && (
                         <Badge colorScheme="gray">+{project.skills.length - 3}</Badge>
                       )}
+                    </HStack>
+                    <Divider />
+                    <HStack spacing={3}>
+                      <Avatar
+                        size="sm"
+                        name={project.client?.name}
+                        src={project.client?.profile?.avatar}
+                      />
+                      <VStack align="start" spacing={0}>
+                        <Text fontWeight="medium" fontSize="sm">
+                          {project.client?.name || '匿名用户'}
+                        </Text>
+                        <Text fontSize="xs" color="gray.500">
+                          {new Date(project.createdAt).toLocaleDateString('zh-CN')}
+                        </Text>
+                      </VStack>
                     </HStack>
                   </VStack>
                 </Box>

@@ -1,11 +1,13 @@
 'use client';
 
-import { Box, Button, Container, Heading, Text, VStack, SimpleGrid, Icon } from '@chakra-ui/react';
+import { Box, Button, Container, Heading, Text, VStack, SimpleGrid, Icon, HStack } from '@chakra-ui/react';
 import { FaCode, FaUsers, FaHandshake } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export default function HomePage() {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const features = [
     {
@@ -42,13 +44,32 @@ export default function HomePage() {
             <Text fontSize="xl" color="gray.600" mb={8}>
               加入我们的平台，找到适合你的项目，或者发布你的项目需求
             </Text>
-            <Button
-              size="lg"
-              colorScheme="blue"
-              onClick={() => router.push('/projects')}
-            >
-              浏览项目
-            </Button>
+            <HStack spacing={4} justify="center">
+              <Button
+                size="lg"
+                colorScheme="blue"
+                onClick={() => router.push('/projects')}
+              >
+                浏览项目
+              </Button>
+              {session ? (
+                <Button
+                  size="lg"
+                  colorScheme="purple"
+                  onClick={() => router.push('/projects/new')}
+                >
+                  发布项目
+                </Button>
+              ) : (
+                <Button
+                  size="lg"
+                  colorScheme="purple"
+                  onClick={() => router.push('/login')}
+                >
+                  登录后发布
+                </Button>
+              )}
+            </HStack>
           </Box>
 
           <SimpleGrid columns={{ base: 1, md: 3 }} spacing={10} w="full">

@@ -33,8 +33,9 @@ const NavLink = ({ children, href }: { children: React.ReactNode; href: string }
   const isActive = pathname === href;
   
   return (
-    <Link href={href} passHref legacyBehavior>
+    <Box as={Link} href={href}>
       <ChakraLink
+        as="span"
         px={2}
         py={1}
         rounded={'md'}
@@ -47,7 +48,7 @@ const NavLink = ({ children, href }: { children: React.ReactNode; href: string }
       >
         {children}
       </ChakraLink>
-    </Link>
+    </Box>
   );
 };
 
@@ -90,13 +91,7 @@ export default function Navbar() {
             onClick={isOpen ? onClose : onOpen}
           />
           <HStack spacing={8} alignItems={'center'}>
-            <Box 
-              as={Link} 
-              href="/" 
-              fontWeight="bold" 
-              fontSize="xl" 
-              _hover={{ textDecoration: 'none' }}
-            >
+            <Box as={Link} href="/" fontWeight="bold" fontSize="xl" _hover={{ textDecoration: 'none' }}>
               DevMarketplace
             </Box>
             <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
@@ -127,12 +122,21 @@ export default function Navbar() {
                   </HStack>
                 </MenuButton>
                 <MenuList>
-                  <MenuItem as={Link} href="/profile">
-                    个人资料
-                  </MenuItem>
-                  <MenuItem as={Link} href="/projects/my">
-                    我的项目
-                  </MenuItem>
+                  <Box as={Link} href="/profile" w="100%">
+                    <MenuItem as="span">
+                      个人资料
+                    </MenuItem>
+                  </Box>
+                  <Box as={Link} href="/projects/my" w="100%">
+                    <MenuItem as="span">
+                      我的项目
+                    </MenuItem>
+                  </Box>
+                  <Box as={Link} href="/projects/new" w="100%">
+                    <MenuItem as="span">
+                      发布项目
+                    </MenuItem>
+                  </Box>
                   <MenuItem
                     onClick={handleLogout}
                     color="red.500"
@@ -148,36 +152,36 @@ export default function Navbar() {
                 direction={'row'}
                 spacing={6}
               >
-                <Button
-                  as={Link}
-                  href="/login"
-                  display={{ base: 'none', md: 'inline-flex' }}
-                  fontSize={'sm'}
-                  fontWeight={600}
-                  color={'white'}
-                  bg={'blue.400'}
-                  _hover={{
-                    bg: 'blue.300',
-                  }}
-                >
-                  登录
-                </Button>
-                <Button
-                  as={Link}
-                  href="/register"
-                  display={{ base: 'none', md: 'inline-flex' }}
-                  fontSize={'sm'}
-                  fontWeight={600}
-                  color={'blue.400'}
-                  bg={'white'}
-                  border={'1px solid'}
-                  borderColor={'blue.400'}
-                  _hover={{
-                    bg: 'blue.50',
-                  }}
-                >
-                  注册
-                </Button>
+                  <Box as={Link} href="/login">
+                    <Button
+                      display={{ base: 'none', md: 'inline-flex' }}
+                      fontSize={'sm'}
+                      fontWeight={600}
+                      color={'white'}
+                      bg={'blue.400'}
+                      _hover={{
+                        bg: 'blue.300',
+                      }}
+                    >
+                      登录
+                    </Button>
+                  </Box>
+                  <Box as={Link} href="/register">
+                    <Button
+                      display={{ base: 'none', md: 'inline-flex' }}
+                      fontSize={'sm'}
+                      fontWeight={600}
+                      color={'blue.400'}
+                      bg={'white'}
+                      border={'1px solid'}
+                      borderColor={'blue.400'}
+                      _hover={{
+                        bg: 'blue.50',
+                      }}
+                    >
+                      注册
+                    </Button>
+                  </Box>
               </Stack>
             )}
           </Flex>
@@ -193,23 +197,23 @@ export default function Navbar() {
               ))}
               {status !== 'authenticated' ? (
                 <>
-                  <Button
-                    w="full"
-                    as={Link}
-                    href="/login"
-                    colorScheme="blue"
-                  >
-                    登录
-                  </Button>
-                  <Button
-                    w="full"
-                    as={Link}
-                    href="/register"
-                    variant="outline"
-                    colorScheme="blue"
-                  >
-                    注册
-                  </Button>
+                  <Box as={Link} href="/login" w="100%">
+                    <Button
+                      w="full"
+                      colorScheme="blue"
+                    >
+                      登录
+                    </Button>
+                  </Box>
+                  <Box as={Link} href="/register" w="100%">
+                    <Button
+                      w="full"
+                      variant="outline"
+                      colorScheme="blue"
+                    >
+                      注册
+                    </Button>
+                  </Box>
                 </>
               ) : (
                 <Button
