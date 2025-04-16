@@ -21,7 +21,7 @@ import {
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useSession, signOut } from 'next-auth/react';
 
 const Links = [
   { name: '首页', href: '/' },
@@ -53,13 +53,13 @@ const NavLink = ({ children, href }: { children: React.ReactNode; href: string }
 
 export default function Navbar() {
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const toast = useToast();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      logout();
+      await signOut({ redirect: false });
       toast({
         title: '已退出登录',
         status: 'success',
@@ -106,7 +106,7 @@ export default function Navbar() {
             </HStack>
           </HStack>
           <Flex alignItems={'center'}>
-            {isAuthenticated ? (
+            {status === 'authenticated' ? (
               <Menu>
                 <MenuButton
                   as={Button}
@@ -118,11 +118,11 @@ export default function Navbar() {
                   <HStack spacing={2}>
                     <Avatar
                       size={'sm'}
-                      name={user?.name || undefined}
-                      src={user?.profile?.avatar || undefined}
+                      name={session.user?.name || undefined}
+                      src={session.user?.image || undefined}
                     />
                     <Text display={{ base: 'none', md: 'flex' }}>
-                      {user?.name || '用户'}
+                      {session.user?.name || '用户'}
                     </Text>
                   </HStack>
                 </MenuButton>
@@ -191,7 +191,7 @@ export default function Navbar() {
                   {link.name}
                 </NavLink>
               ))}
-              {!isAuthenticated ? (
+              {status !== 'authenticated' ? (
                 <>
                   <Button
                     w="full"

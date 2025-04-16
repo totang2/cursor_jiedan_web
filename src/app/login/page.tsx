@@ -20,7 +20,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
-import { useAuthStore } from '@/store/useAuthStore';
+import { signIn } from 'next-auth/react';
 
 export default function LoginPage() {
     const [formData, setFormData] = useState({
@@ -72,20 +72,15 @@ export default function LoginPage() {
 
         setIsLoading(true);
         try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData),
+            const result = await signIn('credentials', {
+                email: formData.email,
+                password: formData.password,
+                redirect: false,
             });
 
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.error || '登录失败');
+            if (result?.error) {
+                throw new Error(result.error);
             }
-
-            // 使用 auth store 保存用户信息
-            useAuthStore.getState().login(data.user, data.token);
 
             toast({
                 title: '登录成功',

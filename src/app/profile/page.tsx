@@ -24,11 +24,11 @@ import {
     Spinner,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useSession } from 'next-auth/react';
 import { EditIcon } from '@chakra-ui/icons';
 
 export default function ProfilePage() {
-    const { user, isAuthenticated } = useAuthStore();
+    const { data: session, status } = useSession();
     const router = useRouter();
     const toast = useToast();
     const [isLoading, setIsLoading] = useState(true);
@@ -44,48 +44,49 @@ export default function ProfilePage() {
     });
 
     useEffect(() => {
-        // 如果用户未登录，重定向到登录页面
-        if (!isAuthenticated) {
+        if (status === 'unauthenticated') {
             router.push('/login');
             return;
         }
 
-        // 获取用户资料
-        const fetchProfile = async () => {
-            try {
-                const response = await fetch('/api/profile');
-                if (!response.ok) {
-                    throw new Error('获取个人资料失败');
-                }
-                const data = await response.json();
+        if (status === 'authenticated') {
+            // 获取用户资料
+            const fetchProfile = async () => {
+                try {
+                    const response = await fetch('/api/profile');
+                    if (!response.ok) {
+                        throw new Error('获取个人资料失败');
+                    }
+                    const data = await response.json();
 
-                if (data.profile) {
-                    setProfile({
-                        bio: data.profile.bio || '',
-                        location: data.profile.location || '',
-                        website: data.profile.website || '',
-                        github: data.profile.github || '',
-                        linkedin: data.profile.linkedin || '',
-                        hourlyRate: data.profile.hourlyRate || 0,
-                        availability: data.profile.availability ?? true,
+                    if (data.profile) {
+                        setProfile({
+                            bio: data.profile.bio || '',
+                            location: data.profile.location || '',
+                            website: data.profile.website || '',
+                            github: data.profile.github || '',
+                            linkedin: data.profile.linkedin || '',
+                            hourlyRate: data.profile.hourlyRate || 0,
+                            availability: data.profile.availability ?? true,
+                        });
+                    }
+                    setIsLoading(false);
+                } catch (error) {
+                    console.error('获取个人资料失败:', error);
+                    toast({
+                        title: '加载失败',
+                        description: '无法加载个人资料，请稍后重试',
+                        status: 'error',
+                        duration: 3000,
+                        isClosable: true,
                     });
+                    setIsLoading(false);
                 }
-                setIsLoading(false);
-            } catch (error) {
-                console.error('获取个人资料失败:', error);
-                toast({
-                    title: '加载失败',
-                    description: '无法加载个人资料，请稍后重试',
-                    status: 'error',
-                    duration: 3000,
-                    isClosable: true,
-                });
-                setIsLoading(false);
-            }
-        };
+            };
 
-        fetchProfile();
-    }, [isAuthenticated, router, toast]);
+            fetchProfile();
+        }
+    }, [status, router, toast]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value, type } = e.target;
@@ -133,7 +134,7 @@ export default function ProfilePage() {
         }
     };
 
-    if (isLoading) {
+    if (status === 'loading' || isLoading) {
         return (
             <Container maxW="container.lg" py={10} centerContent>
                 <Spinner size="xl" />
@@ -166,15 +167,15 @@ export default function ProfilePage() {
                             <Box textAlign="center">
                                 <Avatar
                                     size="2xl"
-                                    name={user?.name || undefined}
-                                    src={user?.profile?.avatar || undefined}
+                                    name={session?.user?.name || undefined}
+                                    src={session?.user?.image || undefined}
                                 >
                                     <AvatarBadge boxSize="1.25em" bg="green.500" />
                                 </Avatar>
-                                <Heading size="md" mt={4}>{user?.name || '用户'}</Heading>
-                                <Text color="gray.500">{user?.email}</Text>
+                                <Heading size="md" mt={4}>{session?.user?.name || '用户'}</Heading>
+                                <Text color="gray.500">{session?.user?.email}</Text>
                                 <Badge colorScheme="blue" mt={2} px={3} py={1} borderRadius="full">
-                                    {user?.role || '开发者'}
+                                    {session?.user?.role || '开发者'}
                                 </Badge>
                             </Box>
 
