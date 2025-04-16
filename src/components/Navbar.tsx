@@ -10,10 +10,18 @@ import {
   Stack,
   Container,
   Link as ChakraLink,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Avatar,
+  Text,
+  useToast,
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon } from '@chakra-ui/icons';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/useAuthStore';
 
 const Links = [
   { name: '首页', href: '/' },
@@ -45,6 +53,35 @@ const NavLink = ({ children, href }: { children: React.ReactNode; href: string }
 
 export default function Navbar() {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const { user, isAuthenticated, logout } = useAuthStore();
+  const router = useRouter();
+  const toast = useToast();
+
+  const handleLogout = () => {
+    try {
+      // 调用 store 中的 logout 方法清除用户状态
+      logout();
+      
+      // 显示成功提示
+      toast({
+        title: '已退出登录',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+
+      // 重定向到登录页面
+      router.push('/login');
+    } catch (error) {
+      toast({
+        title: '退出登录失败',
+        description: '请稍后重试',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   return (
     <Box bg="white" px={4} boxShadow="sm">
@@ -58,7 +95,11 @@ export default function Navbar() {
             onClick={isOpen ? onClose : onOpen}
           />
           <HStack spacing={8} alignItems={'center'}>
-            <Box fontWeight="bold" fontSize="xl">DevMarketplace</Box>
+            <Link href="/" passHref>
+              <Box as="a" fontWeight="bold" fontSize="xl" cursor="pointer">
+                DevMarketplace
+              </Box>
+            </Link>
             <HStack as={'nav'} spacing={4} display={{ base: 'none', md: 'flex' }}>
               {Links.map((link) => (
                 <NavLink key={link.name} href={link.href}>{link.name}</NavLink>
@@ -66,43 +107,84 @@ export default function Navbar() {
             </HStack>
           </HStack>
           <Flex alignItems={'center'}>
-            <Stack
-              flex={{ base: 1, md: 0 }}
-              justify={'flex-end'}
-              direction={'row'}
-              spacing={6}
-            >
-              <Button
-                as={'a'}
-                display={{ base: 'none', md: 'inline-flex' }}
-                fontSize={'sm'}
-                fontWeight={600}
-                color={'white'}
-                bg={'blue.400'}
-                href={'/login'}
-                _hover={{
-                  bg: 'blue.300',
-                }}
+            {isAuthenticated ? (
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rounded={'full'}
+                  variant={'link'}
+                  cursor={'pointer'}
+                  minW={0}
+                >
+                  <HStack spacing={2}>
+                    <Avatar
+                      size={'sm'}
+                      name={user?.name || undefined}
+                      src={user?.profile?.avatar || undefined}
+                    />
+                    <Text display={{ base: 'none', md: 'flex' }}>
+                      {user?.name || '用户'}
+                    </Text>
+                  </HStack>
+                </MenuButton>
+                <MenuList>
+                  <Link href="/profile" passHref>
+                    <MenuItem as="a">
+                      个人资料
+                    </MenuItem>
+                  </Link>
+                  <Link href="/projects/my" passHref>
+                    <MenuItem as="a">
+                      我的项目
+                    </MenuItem>
+                  </Link>
+                  <MenuItem
+                    onClick={handleLogout}
+                    color="red.500"
+                  >
+                    退出登录
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            ) : (
+              <Stack
+                flex={{ base: 1, md: 0 }}
+                justify={'flex-end'}
+                direction={'row'}
+                spacing={6}
               >
-                登录
-              </Button>
-              <Button
-                as={'a'}
-                display={{ base: 'none', md: 'inline-flex' }}
-                fontSize={'sm'}
-                fontWeight={600}
-                color={'blue.400'}
-                bg={'white'}
-                href={'/register'}
-                border={'1px solid'}
-                borderColor={'blue.400'}
-                _hover={{
-                  bg: 'blue.50',
-                }}
-              >
-                注册
-              </Button>
-            </Stack>
+                <Button
+                  as={Link}
+                  href="/login"
+                  display={{ base: 'none', md: 'inline-flex' }}
+                  fontSize={'sm'}
+                  fontWeight={600}
+                  color={'white'}
+                  bg={'blue.400'}
+                  _hover={{
+                    bg: 'blue.300',
+                  }}
+                >
+                  登录
+                </Button>
+                <Button
+                  as={Link}
+                  href="/register"
+                  display={{ base: 'none', md: 'inline-flex' }}
+                  fontSize={'sm'}
+                  fontWeight={600}
+                  color={'blue.400'}
+                  bg={'white'}
+                  border={'1px solid'}
+                  borderColor={'blue.400'}
+                  _hover={{
+                    bg: 'blue.50',
+                  }}
+                >
+                  注册
+                </Button>
+              </Stack>
+            )}
           </Flex>
         </Flex>
 
@@ -110,8 +192,40 @@ export default function Navbar() {
           <Box pb={4} display={{ md: 'none' }}>
             <Stack as={'nav'} spacing={4}>
               {Links.map((link) => (
-                <NavLink key={link.name} href={link.href}>{link.name}</NavLink>
+                <NavLink key={link.name} href={link.href}>
+                  {link.name}
+                </NavLink>
               ))}
+              {!isAuthenticated ? (
+                <>
+                  <Button
+                    w="full"
+                    as={Link}
+                    href="/login"
+                    colorScheme="blue"
+                  >
+                    登录
+                  </Button>
+                  <Button
+                    w="full"
+                    as={Link}
+                    href="/register"
+                    variant="outline"
+                    colorScheme="blue"
+                  >
+                    注册
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  w="full"
+                  colorScheme="red"
+                  variant="outline"
+                  onClick={handleLogout}
+                >
+                  退出登录
+                </Button>
+              )}
             </Stack>
           </Box>
         ) : null}

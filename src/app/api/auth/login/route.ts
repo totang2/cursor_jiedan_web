@@ -1,15 +1,10 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-// 模拟用户数据库
-const users = [
-    {
-        id: '1',
-        email: 'test@example.com',
-        password: '123456', // 实际应用中应该使用加密密码
-        username: '测试用户',
-    },
-];
+const prisma = new PrismaClient();
 
 export async function POST(request: NextRequest) {
     try {
@@ -25,25 +20,50 @@ export async function POST(request: NextRequest) {
         }
 
         // 查找用户
-        const user = users.find(u => u.email === email);
+        const user = await prisma.user.findUnique({
+            where: { email },
+            include: {
+                profile: true,
+            },
+        });
 
-        // 验证用户和密码
-        if (!user || user.password !== password) {
+        // 如果用户不存在
+        if (!user) {
             return NextResponse.json(
                 { error: '邮箱或密码错误' },
                 { status: 401 }
             );
         }
 
-        // 创建会话令牌（实际应用中应该使用JWT或其他安全的令牌）
-        const token = 'mock_token_' + Date.now();
+        // 验证密码
+        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (!isPasswordValid) {
+            return NextResponse.json(
+                { error: '邮箱或密码错误' },
+                { status: 401 }
+            );
+        }
+
+        // 创建 JWT token
+        const token = jwt.sign(
+            {
+                userId: user.id,
+                email: user.email,
+                role: user.role
+            },
+            process.env.JWT_SECRET || 'your-jwt-secret',
+            { expiresIn: '24h' }
+        );
 
         // 返回成功响应
         return NextResponse.json({
+            success: true,
             user: {
                 id: user.id,
                 email: user.email,
-                username: user.username,
+                name: user.name,
+                role: user.role,
+                profile: user.profile,
             },
             token,
         });
@@ -53,5 +73,7 @@ export async function POST(request: NextRequest) {
             { error: '服务器错误' },
             { status: 500 }
         );
+    } finally {
+        await prisma.$disconnect();
     }
 } 

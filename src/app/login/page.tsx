@@ -20,6 +20,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ViewIcon, ViewOffIcon } from '@chakra-ui/icons';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function LoginPage() {
     const [formData, setFormData] = useState({
@@ -83,9 +84,8 @@ export default function LoginPage() {
                 throw new Error(data.error || '登录失败');
             }
 
-            // 保存用户信息和令牌
-            localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('token', data.token);
+            // 使用 auth store 保存用户信息
+            useAuthStore.getState().login(data.user, data.token);
 
             toast({
                 title: '登录成功',
