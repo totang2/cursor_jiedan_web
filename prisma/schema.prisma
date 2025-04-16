@@ -12,6 +12,7 @@ model User {
   email        String        @unique
   name         String?
   password     String
+  image        String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   role         String        @default("user")
@@ -19,6 +20,8 @@ model User {
   profile      Profile?
   projects     Project[]     @relation("ProjectOwner")
   skills       Skill[]       @relation("SkillToUser")
+  messages     Message[]
+  chats        Chat[]        @relation("ChatUsers")
 }
 
 model Profile {
@@ -70,6 +73,31 @@ model Skill {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   users     User[]   @relation("SkillToUser")
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  chatId    String
+  senderId  String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  chat      Chat     @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+  @@index([senderId])
+}
+
+model Chat {
+  id        String    @id @default(cuid())
+  messages  Message[]
+  users     User[]    @relation("ChatUsers")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([updatedAt])
 }
 
 enum UserRole {

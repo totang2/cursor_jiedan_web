@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from '@/components/Providers';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,8 +20,17 @@ export default function RootLayout({
     <html lang="zh">
       <body className={inter.className}>
         <Providers>
-          <Navbar />
-          {children}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            minHeight: '100vh'
+          }}>
+            <Navbar />
+            <main style={{ flex: '1 0 auto' }}>
+              {children}
+            </main>
+            <Footer />
+          </div>
         </Providers>
       </body>
     </html>
