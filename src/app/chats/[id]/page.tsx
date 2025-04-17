@@ -45,7 +45,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     const [newMessage, setNewMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const { socket, error, isConnected, joinChat, leaveChat, sendMessage, startTyping, stopTyping, onNewMessage } = useSocket();
+    const { socket, error, isConnected, joinChat, leaveChat, sendMessage, startTyping, stopTyping, onNewMessage, onTypingStatus, onStopTyping } = useSocket();
     const [chatError, setChatError] = useState<string | null>(null);
 
     const fetchMessages = async () => {
@@ -94,17 +94,31 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         console.log('Joining chat:', params.id);
         joinChat(params.id);
 
-        const cleanup = onNewMessage((message) => {
+        const messageCleanup = onNewMessage((message) => {
             setMessages((prev) => [...prev, message]);
             scrollToBottom();
+        });
+
+        const typingCleanup = onTypingStatus((userId) => {
+            if (userId !== session?.user?.id) {
+                setIsTyping(true);
+            }
+        });
+
+        const stopTypingCleanup = onStopTyping((userId) => {
+            if (userId !== session?.user?.id) {
+                setIsTyping(false);
+            }
         });
 
         return () => {
             console.log('Leaving chat:', params.id);
             leaveChat(params.id);
-            cleanup?.();
+            messageCleanup?.();
+            typingCleanup?.();
+            stopTypingCleanup?.();
         };
-    }, [params.id, isConnected, joinChat, leaveChat, onNewMessage]);
+    }, [params.id, isConnected, joinChat, leaveChat, onNewMessage, onTypingStatus, onStopTyping, session?.user?.id]);
 
     useEffect(() => {
         if (error) {

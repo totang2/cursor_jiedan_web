@@ -13,8 +13,16 @@ export const useSocket = () => {
 
         const connectSocket = async () => {
             try {
+                // Always connect to port 3001 for the Socket.IO server
+                const protocol = window.location.protocol;
+                const hostname = window.location.hostname;
+                const port = '3000'; // Always use port 3000 for Socket.IO server
+                const baseUrl = `${protocol}//${hostname}:${port}`;
+
+                console.log('Connecting to socket server at:', baseUrl);
+
                 // Initialize socket connection
-                const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001', {
+                const socket = io(baseUrl, {
                     path: '/api/socket',
                     transports: ['websocket', 'polling'],
                     reconnection: true,
@@ -25,7 +33,7 @@ export const useSocket = () => {
 
                 // Connection event handlers
                 socket.on('connect', () => {
-                    console.log('Socket connected');
+                    console.log('Socket connected to:', baseUrl);
                     setIsConnected(true);
                     setError(null);
                 });
@@ -109,6 +117,36 @@ export const useSocket = () => {
         }
     };
 
+    const startTyping = (chatId: string, userId: string) => {
+        if (!socketRef.current || !isConnected) {
+            console.warn('Socket not connected');
+            return;
+        }
+
+        try {
+            socketRef.current.emit('typing', { chatId, userId });
+            console.log('Started typing in chat:', chatId);
+        } catch (err) {
+            console.error('Error starting typing:', err);
+            setError('Failed to update typing status');
+        }
+    };
+
+    const stopTyping = (chatId: string, userId: string) => {
+        if (!socketRef.current || !isConnected) {
+            console.warn('Socket not connected');
+            return;
+        }
+
+        try {
+            socketRef.current.emit('stop-typing', { chatId, userId });
+            console.log('Stopped typing in chat:', chatId);
+        } catch (err) {
+            console.error('Error stopping typing:', err);
+            setError('Failed to update typing status');
+        }
+    };
+
     const onNewMessage = (callback: (message: any) => void) => {
         if (!socketRef.current || !isConnected) {
             console.warn('Socket not connected');
@@ -126,6 +164,40 @@ export const useSocket = () => {
         }
     };
 
+    const onTypingStatus = (callback: (userId: string) => void) => {
+        if (!socketRef.current || !isConnected) {
+            console.warn('Socket not connected');
+            return;
+        }
+
+        try {
+            socketRef.current.on('user-typing', callback);
+            return () => {
+                socketRef.current?.off('user-typing', callback);
+            };
+        } catch (err) {
+            console.error('Error setting up typing listener:', err);
+            setError('Failed to set up typing listener');
+        }
+    };
+
+    const onStopTyping = (callback: (userId: string) => void) => {
+        if (!socketRef.current || !isConnected) {
+            console.warn('Socket not connected');
+            return;
+        }
+
+        try {
+            socketRef.current.on('user-stop-typing', callback);
+            return () => {
+                socketRef.current?.off('user-stop-typing', callback);
+            };
+        } catch (err) {
+            console.error('Error setting up stop typing listener:', err);
+            setError('Failed to set up typing listener');
+        }
+    };
+
     return {
         socket: socketRef.current,
         isConnected,
@@ -133,6 +205,10 @@ export const useSocket = () => {
         joinChat,
         leaveChat,
         sendMessage,
+        startTyping,
+        stopTyping,
         onNewMessage,
+        onTypingStatus,
+        onStopTyping,
     };
 }; 
