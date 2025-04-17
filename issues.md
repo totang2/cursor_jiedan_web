@@ -39,3 +39,34 @@ psql dev_marketplace -c "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO 
 psql dev_marketplace -c "GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO yuan;"
 
 ```
+
+# websocket 支持
+
+# alipay 支持
+
+```
+npm install alipay-sdk
+```
+
+我已经创建了支付通知处理路由，让我解释一下这个实现的主要功能：
+1. 路由位置：src/app/api/payments/notify/route.ts
+2. 主要功能：
+接收支付宝的异步通知
+验证通知签名
+处理支付成功的情况
+更新订单状态
+创建支付记录
+3. 处理流程：
+首先从请求中获取支付宝发送的表单数据
+使用 alipay.checkNotifySign() 验证通知签名的真实性
+从参数中解构出订单号、交易状态和支付宝交易号
+当交易状态为 TRADE_SUCCESS 时：
+查找对应的订单
+如果订单状态为 PENDING，则在一个事务中：
+更新订单状态为 PAID
+创建新的支付记录
+返回 "success" 给支付宝服务器
+4. 错误处理：
+- 无效签名返回 400 状态码
+- 订单未找到返回 404 状态码
+- 其他错误返回 500 状态码

@@ -7,6 +7,12 @@ const nextConfig = {
         });
         return config;
     },
+    transpilePackages: [
+        '@chakra-ui/react',
+        '@chakra-ui/next-js',
+        '@chakra-ui/icons',
+        'framer-motion'
+    ]
 };
 
 module.exports = nextConfig; 

@@ -3,13 +3,13 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import {
-  Box,
   Container,
+  Box,
   Heading,
   Text,
+  Badge,
   VStack,
   HStack,
-  Badge,
   Divider,
   Avatar,
   Button,
@@ -24,8 +24,11 @@ import {
   ModalFooter,
   ModalCloseButton,
   useDisclosure,
+  Center,
 } from '@chakra-ui/react';
 import { useSession } from 'next-auth/react';
+import { format } from 'date-fns';
+import PayButton from '@/components/PayButton';
 
 const statusColorScheme = {
   OPEN: 'green',
@@ -39,124 +42,130 @@ const statusLabels = {
   COMPLETED: '已完成',
 } as const;
 
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  budget: number;
+  deadline: string;
+  category: string;
+  status: string;
+  skills: string[];
+  createdAt: string;
+  client: {
+    id: string;
+    name: string;
+    email: string;
+    profile?: {
+      avatar?: string;
+      bio?: string;
+    };
+  };
+}
+
 export default function ProjectDetailPage() {
-  const { id } = useParams();
+  const params = useParams();
   const { data: session } = useSession();
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const [project, setProject] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [project, setProject] = useState<Project | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchProject = async () => {
+      if (!params?.id) return;
+
       try {
-        const response = await fetch(`/api/projects/${id}`);
+        const response = await fetch(`/api/projects/${params.id}`);
         if (!response.ok) {
-          throw new Error('获取项目详情失败');
+          throw new Error('Failed to fetch project');
         }
         const data = await response.json();
         setProject(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '获取项目详情失败');
+      } catch (error) {
+        console.error('Error fetching project:', error);
+        setError('Failed to load project details');
         toast({
-          title: '错误',
-          description: err instanceof Error ? err.message : '获取项目详情失败',
+          title: 'Error',
+          description: 'Failed to load project details',
           status: 'error',
           duration: 5000,
           isClosable: true,
         });
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     fetchProject();
-  }, [id, toast]);
+  }, [params?.id, toast]);
 
   const handleApply = async () => {
-    if (!message.trim()) {
-      toast({
-        title: '错误',
-        description: '请填写申请信息',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-      return;
-    }
+    if (!params?.id) return;
 
-    setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/projects/${id}/apply`, {
+      const response = await fetch(`/api/projects/${params.id}/apply`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message }),
       });
-
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || '申请失败');
+        throw new Error('Failed to apply for project');
       }
-
       toast({
-        title: '申请成功',
-        description: '你的申请已提交，请等待项目方的回复',
+        title: 'Success',
+        description: 'Application submitted successfully',
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
-      onClose();
-      setMessage('');
-    } catch (err) {
+    } catch (error) {
+      console.error('Error applying for project:', error);
       toast({
-        title: '错误',
-        description: err instanceof Error ? err.message : '申请失败',
+        title: 'Error',
+        description: 'Failed to submit application',
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <Container maxW="container.xl" py={8} centerContent>
+      <Center h="50vh">
         <Spinner size="xl" />
-      </Container>
+      </Center>
     );
   }
 
   if (error || !project) {
     return (
-      <Container maxW="container.xl" py={8}>
+      <Center h="50vh">
         <Text color="red.500">{error || '项目不存在'}</Text>
-      </Container>
+      </Center>
     );
   }
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <VStack spacing={8} align="stretch">
+    <Container maxW="container.lg" py={8}>
+      <VStack spacing={6} align="stretch">
         <Box>
-          <HStack justify="space-between" align="center" mb={4}>
-            <Heading size="xl">{project.title}</Heading>
-            <Badge colorScheme={statusColorScheme[project.status]} fontSize="md" px={3} py={1}>
-              {statusLabels[project.status]}
+          <Heading size="lg" mb={2}>
+            {project.title}
+          </Heading>
+          <HStack spacing={4} mb={4}>
+            <Badge colorScheme="blue">{project.category}</Badge>
+            <Badge colorScheme={statusColorScheme[project.status as keyof typeof statusColorScheme]}>
+              {statusLabels[project.status as keyof typeof statusLabels]}
             </Badge>
           </HStack>
-          <Text color="gray.600" fontSize="lg" mb={4}>
+        </Box>
+
+        <Box>
+          <Text fontSize="lg" mb={4}>
             {project.description}
-          </Text>
-          <Text fontWeight="bold" color="blue.600" fontSize="xl">
-            预算: ¥{typeof project.budget === 'number' ? project.budget.toLocaleString() : '0'}
           </Text>
         </Box>
 
@@ -192,6 +201,30 @@ export default function ProjectDetailPage() {
             </VStack>
           </HStack>
         </Box>
+
+        <Divider />
+
+        <HStack justify="space-between" align="center">
+          <VStack align="start" spacing={2}>
+            <Text>
+              <strong>预算：</strong>¥{project.budget ? project.budget.toFixed(2) : '0.00'}
+            </Text>
+            <Text>
+              <strong>截止日期：</strong>
+              {project.deadline ? format(new Date(project.deadline), 'yyyy-MM-dd') : '未设置'}
+            </Text>
+            <Text>
+              <strong>发布时间：</strong>
+              {project.createdAt ? format(new Date(project.createdAt), 'yyyy-MM-dd HH:mm') : '未知'}
+            </Text>
+          </VStack>
+
+          {session?.user?.id && project.client?.id && session.user.id !== project.client.id && (
+            <Box>
+              <PayButton projectId={project.id} />
+            </Box>
+          )}
+        </HStack>
 
         {session && project.status === 'OPEN' && (
           <Box>
