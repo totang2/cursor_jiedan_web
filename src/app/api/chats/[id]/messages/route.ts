@@ -58,6 +58,26 @@ export async function GET(
             },
         });
 
+        // Get other user
+        const otherUser = await prisma.user.findFirst({
+            where: {
+                chats: {
+                    some: {
+                        id: params.id,
+                    },
+                },
+                id: {
+                    not: user.id,
+                },
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+            },
+        });
+
         // Mark unread messages as read
         await prisma.message.updateMany({
             where: {
@@ -72,7 +92,15 @@ export async function GET(
             },
         });
 
-        return NextResponse.json(messages);
+        return NextResponse.json({
+            messages: messages.map(msg => ({
+                id: msg.id,
+                content: msg.content,
+                senderId: msg.senderId,
+                createdAt: msg.createdAt,
+            })),
+            otherUser,
+        });
     } catch (error) {
         console.error('Error fetching messages:', error);
         return NextResponse.json(

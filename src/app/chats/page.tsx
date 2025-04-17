@@ -103,11 +103,11 @@ export default function ChatsPage() {
                                 <HStack spacing={4}>
                                     <Avatar
                                         size="md"
-                                        name={chat.otherUser.name || ''}
-                                        src={chat.otherUser.image || ''}
+                                        name={chat.otherUser?.name || '未知用户'}
+                                        src={chat.otherUser?.image || ''}
                                     />
                                     <Box flex={1}>
-                                        <Text fontWeight="bold">{chat.otherUser.name}</Text>
+                                        <Text fontWeight="bold">{chat.otherUser?.name || '未知用户'}</Text>
                                         {chat.lastMessage && (
                                             <Text color="gray.600" noOfLines={1}>
                                                 {chat.lastMessage.content}

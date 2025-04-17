@@ -1,15 +1,18 @@
 import { NextResponse } from 'next/server';
-import { getIO } from '@/lib/socket';
+import { initSocket } from '@/lib/socket';
+import { headers } from 'next/headers';
 
 export async function GET(req: Request) {
     try {
-        const io = getIO();
+        console.log('Initializing Socket.IO connection...');
+        const io = initSocket();
 
         if (!io) {
             throw new Error('Failed to initialize Socket.IO server');
         }
 
-        return new NextResponse(null, { status: 200 });
+        console.log('Socket.IO server initialized successfully');
+        return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Socket.IO initialization error:', error);
         return NextResponse.json(

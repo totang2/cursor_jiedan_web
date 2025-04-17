@@ -15,6 +15,7 @@ interface Project {
   skills: string[];
   createdAt: string;
   client?: {
+    id: string;
     name?: string;
     profile?: {
       avatar?: string;
@@ -59,6 +60,30 @@ export default function ProjectsPage() {
 
     fetchProjects();
   }, []);
+
+  const createChat = async (userId: string) => {
+    if (!userId) return;
+
+    try {
+      const response = await fetch('/api/chats', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('创建聊天失败');
+      }
+
+      const data = await response.json();
+      router.push(`/chats/${data.id}`);
+    } catch (error) {
+      console.error('创建聊天失败:', error);
+      // 可以添加一个 toast 提示
+    }
+  };
 
   if (loading) {
     return (
@@ -156,6 +181,20 @@ export default function ProjectsPage() {
                           {new Date(project.createdAt).toLocaleDateString('zh-CN')}
                         </Text>
                       </VStack>
+                      {session && project.client?.id && (
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          variant="outline"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            createChat(project.client.id);
+                          }}
+                        >
+                          联系发布者
+                        </Button>
+                      )}
                     </HStack>
                   </VStack>
                 </Box>
