@@ -14,6 +14,10 @@ import {
     Avatar,
     useToast,
     Spinner,
+    Alert,
+    AlertIcon,
+    AlertTitle,
+    AlertDescription,
 } from '@chakra-ui/react';
 import { useSocket } from '@/hooks/useSocket';
 
@@ -41,63 +45,8 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     const [newMessage, setNewMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const socket = useSocket();
-
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login');
-        }
-    }, [status, router]);
-
-    useEffect(() => {
-        if (status === 'authenticated' && socket) {
-            fetchMessages();
-
-            // 加入聊天室
-            socket.emit('join-chat', params.id);
-            console.log('Joining chat:', params.id);
-
-            // 监听新消息
-            socket.on('new-message', (message: Message) => {
-                console.log('Received new message:', message);
-                setMessages(prev => [...prev, message]);
-                scrollToBottom();
-            });
-
-            // 监听输入状态
-            socket.on('user-typing', (userId: string) => {
-                if (userId !== session?.user?.id) {
-                    setIsTyping(true);
-                }
-            });
-
-            socket.on('user-stop-typing', (userId: string) => {
-                if (userId !== session?.user?.id) {
-                    setIsTyping(false);
-                }
-            });
-
-            // 监听连接错误
-            socket.on('connect_error', (error) => {
-                console.error('Socket connection error:', error);
-                toast({
-                    title: '连接错误',
-                    description: '无法连接到聊天服务器',
-                    status: 'error',
-                    duration: 3000,
-                });
-            });
-
-            return () => {
-                console.log('Leaving chat:', params.id);
-                socket.emit('leave-chat', params.id);
-                socket.off('new-message');
-                socket.off('user-typing');
-                socket.off('user-stop-typing');
-                socket.off('connect_error');
-            };
-        }
-    }, [status, socket, params.id, session?.user?.id]);
+    const { socket, error, isConnected, joinChat, leaveChat, sendMessage, startTyping, stopTyping, onNewMessage } = useSocket();
+    const [chatError, setChatError] = useState<string | null>(null);
 
     const fetchMessages = async () => {
         try {
@@ -109,62 +58,11 @@ export default function ChatPage({ params }: { params: { id: string } }) {
             setMessages(data.messages);
             setOtherUser(data.otherUser);
             scrollToBottom();
-        } catch (error) {
-            toast({
-                title: 'Error',
-                description: 'Failed to load messages',
-                status: 'error',
-                duration: 3000,
-                isClosable: true,
-            });
+        } catch (err) {
+            console.error('Error fetching messages:', err);
+            setChatError('Failed to load messages');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const handleSendMessage = async () => {
-        if (!newMessage.trim() || !socket) return;
-
-        try {
-            const response = await fetch(`/api/chats/${params.id}/messages`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ content: newMessage }),
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to send message');
-            }
-
-            const message = await response.json();
-
-            // 立即更新本地消息列表
-            setMessages(prev => [...prev, message]);
-
-            // 发送到 WebSocket
-            socket.emit('send-message', {
-                chatId: params.id,
-                message: {
-                    ...message,
-                    sender: {
-                        id: session?.user?.id,
-                        name: session?.user?.name,
-                        image: session?.user?.image,
-                    },
-                },
-            });
-
-            setNewMessage('');
-            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        } catch (error) {
-            console.error('Error sending message:', error);
-            toast({
-                title: '发送消息失败',
-                status: 'error',
-                duration: 3000,
-            });
         }
     };
 
@@ -172,14 +70,91 @@ export default function ChatPage({ params }: { params: { id: string } }) {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.push('/login');
+        }
+    }, [status, router]);
+
+    useEffect(() => {
+        if (!session?.user?.email) {
+            router.push('/login');
+            return;
+        }
+
+        fetchMessages();
+    }, [params.id, session?.user?.email]);
+
+    useEffect(() => {
+        if (!isConnected) {
+            console.log('Waiting for socket connection...');
+            return;
+        }
+
+        console.log('Joining chat:', params.id);
+        joinChat(params.id);
+
+        const cleanup = onNewMessage((message) => {
+            setMessages((prev) => [...prev, message]);
+            scrollToBottom();
+        });
+
+        return () => {
+            console.log('Leaving chat:', params.id);
+            leaveChat(params.id);
+            cleanup?.();
+        };
+    }, [params.id, isConnected, joinChat, leaveChat, onNewMessage]);
+
+    useEffect(() => {
+        if (error) {
+            console.error('Socket error:', error);
+            setChatError(error);
+        }
+    }, [error]);
+
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages]);
+
+    const handleSendMessage = async (content: string) => {
+        if (!session?.user?.email || !isConnected) {
+            setChatError('Not connected to chat server');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/chats/${params.id}/messages`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ content }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to send message');
+            }
+
+            const message = await response.json();
+            sendMessage(params.id, message);
+            setNewMessage('');
+        } catch (err) {
+            console.error('Error sending message:', err);
+            setChatError('Failed to send message');
+        }
+    };
+
     const handleTyping = () => {
-        if (!socket) return;
-        socket.emit('typing', { chatId: params.id, userId: session?.user?.id });
+        if (params.id && session?.user?.id) {
+            startTyping(params.id, session.user.id);
+        }
     };
 
     const handleStopTyping = () => {
-        if (!socket) return;
-        socket.emit('stop-typing', { chatId: params.id, userId: session?.user?.id });
+        if (params.id && session?.user?.id) {
+            stopTyping(params.id, session.user.id);
+        }
     };
 
     if (status === 'loading' || loading) {
@@ -189,6 +164,18 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                     <Spinner size="xl" />
                 </Box>
             </Container>
+        );
+    }
+
+    if (chatError) {
+        return (
+            <Box p={4}>
+                <Alert status="error">
+                    <AlertIcon />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{chatError}</AlertDescription>
+                </Alert>
+            </Box>
         );
     }
 
@@ -248,14 +235,14 @@ export default function ChatPage({ params }: { params: { id: string } }) {
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={(e) => {
                             if (e.key === 'Enter') {
-                                handleSendMessage();
+                                handleSendMessage(newMessage);
                             }
                         }}
                         onFocus={handleTyping}
                         onBlur={handleStopTyping}
                         placeholder="输入消息..."
                     />
-                    <Button colorScheme="blue" onClick={handleSendMessage}>
+                    <Button colorScheme="blue" onClick={() => handleSendMessage(newMessage)}>
                         发送
                     </Button>
                 </HStack>

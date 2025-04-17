@@ -4,20 +4,30 @@ let io: SocketIOServer | null = null;
 
 export const getIO = () => {
     if (!io) {
+        console.log('Initializing Socket.IO server');
+
         io = new SocketIOServer({
             path: '/api/socket',
             addTrailingSlash: false,
             cors: {
-                origin: process.env.NODE_ENV === 'development'
-                    ? 'http://localhost:3001'
-                    : process.env.NEXT_PUBLIC_BASE_URL,
-                methods: ['GET', 'POST'],
+                origin: ['http://localhost:3000', 'http://localhost:3001'],
+                methods: ['GET', 'POST', 'OPTIONS'],
                 credentials: true,
+                allowedHeaders: ['Content-Type', 'Authorization'],
             },
             transports: ['websocket', 'polling'],
             allowEIO3: true,
             pingTimeout: 60000,
             pingInterval: 25000,
+            connectTimeout: 45000,
+        });
+
+        console.log('Socket.IO server initialized with config:', {
+            path: '/api/socket',
+            cors: {
+                origin: ['http://localhost:3000', 'http://localhost:3001'],
+            },
+            transports: ['websocket', 'polling'],
         });
 
         io.on('connection', (socket) => {
