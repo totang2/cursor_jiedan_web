@@ -19,10 +19,19 @@ import { useSession, signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
+interface SessionUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+  role: string;
+}
+
 export default function Navbar() {
   const { colorMode, toggleColorMode } = useColorMode();
   const { data: session } = useSession();
   const router = useRouter();
+  const user = session?.user as SessionUser | undefined;
 
   return (
     <Box bg={useColorModeValue('white', 'gray.900')} px={4} boxShadow="sm">
@@ -61,8 +70,8 @@ export default function Navbar() {
                   >
                     <Avatar
                       size="sm"
-                      src={session.user?.image || undefined}
-                      name={session.user?.name || undefined}
+                      src={user?.image || undefined}
+                      name={user?.name || undefined}
                     />
                   </MenuButton>
                   <MenuList>

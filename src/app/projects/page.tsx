@@ -6,6 +6,14 @@ import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
+interface Client {
+  id: string;
+  name?: string;
+  profile?: {
+    avatar?: string;
+  };
+}
+
 interface Project {
   id: string;
   title: string;
@@ -14,13 +22,7 @@ interface Project {
   status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
   skills: string[];
   createdAt: string;
-  client?: {
-    id: string;
-    name?: string;
-    profile?: {
-      avatar?: string;
-    };
-  };
+  client: Client;
 }
 
 const statusColorScheme = {

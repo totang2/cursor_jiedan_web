@@ -23,6 +23,14 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 
+interface SessionUser {
+  id: string;
+  email: string;
+  name?: string | null;
+  image?: string | null;
+  role: string;
+}
+
 const Links = [
   { name: '首页', href: '/' },
   { name: '项目列表', href: '/projects' },
@@ -57,6 +65,7 @@ export default function Navbar() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const toast = useToast();
+  const user = session?.user as SessionUser | undefined;
 
   const handleLogout = async () => {
     try {
@@ -113,11 +122,11 @@ export default function Navbar() {
                   <HStack spacing={2}>
                     <Avatar
                       size={'sm'}
-                      name={session.user?.name || undefined}
-                      src={session.user?.image || undefined}
+                      name={user?.name || undefined}
+                      src={user?.image || undefined}
                     />
                     <Text display={{ base: 'none', md: 'flex' }}>
-                      {session.user?.name || '用户'}
+                      {user?.name || '用户'}
                     </Text>
                   </HStack>
                 </MenuButton>
@@ -200,36 +209,6 @@ export default function Navbar() {
                   {link.name}
                 </NavLink>
               ))}
-              {status !== 'authenticated' ? (
-                <>
-                  <Box as={Link} href="/login" w="100%">
-                    <Button
-                      w="full"
-                      colorScheme="blue"
-                    >
-                      登录
-                    </Button>
-                  </Box>
-                  <Box as={Link} href="/register" w="100%">
-                    <Button
-                      w="full"
-                      variant="outline"
-                      colorScheme="blue"
-                    >
-                      注册
-                    </Button>
-                  </Box>
-                </>
-              ) : (
-                <Button
-                  w="full"
-                  colorScheme="red"
-                  variant="outline"
-                  onClick={handleLogout}
-                >
-                  退出登录
-                </Button>
-              )}
             </Stack>
           </Box>
         ) : null}

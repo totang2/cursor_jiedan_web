@@ -19,12 +19,12 @@ import {
     Heading,
     FormErrorMessage,
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 
 export default function NewProjectPage() {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const router = useRouter();
     const toast = useToast();
     const [isLoading, setIsLoading] = useState(false);
@@ -44,6 +44,16 @@ export default function NewProjectPage() {
         category: '',
         skills: '',
     });
+
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.push('/login');
+        }
+    }, [status, router]);
+
+    if (status === 'loading') {
+        return null;
+    }
 
     const validateForm = () => {
         const newErrors = {
@@ -146,11 +156,6 @@ export default function NewProjectPage() {
             }));
         }
     };
-
-    if (!session) {
-        router.push('/login');
-        return null;
-    }
 
     return (
         <Container maxW="container.md" py={8}>

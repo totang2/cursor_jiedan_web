@@ -27,13 +27,31 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { EditIcon } from '@chakra-ui/icons';
 
+interface UserProfile {
+    bio: string;
+    location: string;
+    website: string;
+    github: string;
+    linkedin: string;
+    hourlyRate: number;
+    availability: boolean;
+}
+
+interface SessionUser {
+    id: string;
+    email: string;
+    name?: string | null;
+    image?: string | null;
+    role: string;
+}
+
 export default function ProfilePage() {
     const { data: session, status } = useSession();
     const router = useRouter();
     const toast = useToast();
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
-    const [profile, setProfile] = useState({
+    const [profile, setProfile] = useState<UserProfile>({
         bio: '',
         location: '',
         website: '',
@@ -42,6 +60,8 @@ export default function ProfilePage() {
         hourlyRate: 0,
         availability: true,
     });
+
+    const user = session?.user as SessionUser | undefined;
 
     useEffect(() => {
         if (status === 'unauthenticated') {
@@ -167,15 +187,15 @@ export default function ProfilePage() {
                             <Box textAlign="center">
                                 <Avatar
                                     size="2xl"
-                                    name={session?.user?.name || undefined}
-                                    src={session?.user?.image || undefined}
+                                    name={user?.name || undefined}
+                                    src={user?.image || undefined}
                                 >
                                     <AvatarBadge boxSize="1.25em" bg="green.500" />
                                 </Avatar>
-                                <Heading size="md" mt={4}>{session?.user?.name || '用户'}</Heading>
-                                <Text color="gray.500">{session?.user?.email}</Text>
+                                <Heading size="md" mt={4}>{user?.name || '用户'}</Heading>
+                                <Text color="gray.500">{user?.email}</Text>
                                 <Badge colorScheme="blue" mt={2} px={3} py={1} borderRadius="full">
-                                    {session?.user?.role || '开发者'}
+                                    {user?.role || '开发者'}
                                 </Badge>
                             </Box>
 
@@ -210,7 +230,7 @@ export default function ProfilePage() {
                                     name="website"
                                     value={profile.website}
                                     onChange={handleChange}
-                                    placeholder="https://example.com"
+                                    placeholder="https://..."
                                 />
                             </FormControl>
 
@@ -220,7 +240,7 @@ export default function ProfilePage() {
                                     name="github"
                                     value={profile.github}
                                     onChange={handleChange}
-                                    placeholder="https://github.com/username"
+                                    placeholder="https://github.com/..."
                                 />
                             </FormControl>
 
@@ -230,41 +250,33 @@ export default function ProfilePage() {
                                     name="linkedin"
                                     value={profile.linkedin}
                                     onChange={handleChange}
-                                    placeholder="https://linkedin.com/in/username"
+                                    placeholder="https://linkedin.com/in/..."
                                 />
                             </FormControl>
 
                             <FormControl>
-                                <FormLabel>时薪 (¥/小时)</FormLabel>
+                                <FormLabel>时薪（元/小时）</FormLabel>
                                 <Input
                                     name="hourlyRate"
                                     type="number"
                                     value={profile.hourlyRate}
                                     onChange={handleChange}
-                                    placeholder="例如：150"
+                                    placeholder="0"
                                 />
                             </FormControl>
 
                             <FormControl>
                                 <FormLabel>接单状态</FormLabel>
-                                <HStack>
-                                    <Badge
-                                        colorScheme={profile.availability ? 'green' : 'red'}
-                                        fontSize="md"
-                                        px={3}
-                                        py={1}
-                                        borderRadius="full"
-                                    >
-                                        {profile.availability ? '可接单' : '暂不接单'}
-                                    </Badge>
-                                    <Button
-                                        size="sm"
-                                        colorScheme={profile.availability ? 'red' : 'green'}
-                                        onClick={() => setProfile(prev => ({ ...prev, availability: !prev.availability }))}
-                                    >
-                                        {profile.availability ? '设为暂不接单' : '设为可接单'}
-                                    </Button>
-                                </HStack>
+                                <Button
+                                    name="availability"
+                                    colorScheme={profile.availability ? 'green' : 'gray'}
+                                    onClick={() => setProfile(prev => ({
+                                        ...prev,
+                                        availability: !prev.availability
+                                    }))}
+                                >
+                                    {profile.availability ? '可接单' : '暂不接单'}
+                                </Button>
                             </FormControl>
                         </VStack>
                     </Box>

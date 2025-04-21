@@ -23,6 +23,33 @@ import {
 import { ChevronDownIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import { useSession } from 'next-auth/react';
 
+interface Application {
+    id: string;
+    projectId: string;
+    userId: string;
+    message?: string;
+    status: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+interface Project {
+    id: string;
+    title: string;
+    description: string;
+    budget: number;
+    deadline: string;
+    category: string;
+    status: ProjectStatus;
+    clientId: string;
+    skills: string[];
+    createdAt: string;
+    updatedAt: string;
+    applications: Application[];
+}
+
+type ProjectStatus = 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
 const statusColorScheme = {
     OPEN: 'green',
     IN_PROGRESS: 'blue',
@@ -41,7 +68,7 @@ export default function MyProjectsPage() {
     const router = useRouter();
     const { data: session } = useSession();
     const toast = useToast();
-    const [projects, setProjects] = useState([]);
+    const [projects, setProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
@@ -71,7 +98,7 @@ export default function MyProjectsPage() {
         fetchProjects();
     }, [toast]);
 
-    const handleStatusChange = async (projectId: string, newStatus: string) => {
+    const handleStatusChange = async (projectId: string, newStatus: ProjectStatus) => {
         try {
             const response = await fetch(`/api/projects/${projectId}/status`, {
                 method: 'PATCH',
