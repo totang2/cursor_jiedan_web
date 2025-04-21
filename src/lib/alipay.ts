@@ -20,4 +20,10 @@ const config: AlipayConfig = {
 
 const alipay = new AlipaySdk(config);
 
+// 导出 AlipayFormData 类型
+export type AlipayFormData = {
+    method: string;
+    bizContent: Record<string, any>;
+};
+
 export { alipay }; 

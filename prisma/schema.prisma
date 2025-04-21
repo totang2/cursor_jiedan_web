@@ -26,17 +26,19 @@ model User {
 }
 
 model Profile {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  bio       String?
-  avatar    String?
-  location  String?
-  website   String?
-  github    String?
-  linkedin  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  bio         String?
+  avatar      String?
+  location    String?
+  website     String?
+  github      String?
+  linkedin    String?
+  hourlyRate  Float?
+  availability String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id])
 }
 
 model Project {

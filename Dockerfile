@@ -7,12 +7,14 @@ WORKDIR /app
 COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies including alipay-sdk
+# Install dependencies including all required packages and their type definitions
 RUN npm install
-RUN npm install alipay-sdk
+RUN npm install jsonwebtoken zod alipay-sdk@3.6.1
+RUN npm install --save-dev @types/jsonwebtoken @types/bcryptjs
 
-# Generate Prisma Client
+# Generate Prisma Client and run migrations
 RUN npx prisma generate
+RUN npx prisma migrate deploy
 
 # Copy the rest of the application
 COPY . .
@@ -31,14 +33,17 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/node_modules/@types ./node_modules/@types
 
 # Install production dependencies only
 COPY package*.json ./
 RUN npm install --production
-RUN npm install alipay-sdk
+RUN npm install jsonwebtoken zod alipay-sdk@3.6.1
+RUN npm install --save-dev @types/jsonwebtoken @types/bcryptjs
 
-# Generate Prisma Client in production
+# Generate Prisma Client and run migrations in production
 RUN npx prisma generate
+RUN npx prisma migrate deploy
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs

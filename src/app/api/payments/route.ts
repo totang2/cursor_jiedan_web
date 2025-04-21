@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { alipay } from '@/lib/alipay';
 import { prisma } from '@/lib/prisma';
+import { OrderStatus } from '@prisma/client';
 
 export async function POST(req: Request) {
     try {
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Order not found' }, { status: 404 });
         }
 
-        if (order.status !== 'PENDING') {
+        if (order.status !== OrderStatus.PENDING) {
             return NextResponse.json({ error: 'Order cannot be paid' }, { status: 400 });
         }
 
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
 
         await prisma.order.update({
             where: { id: orderId },
-            data: { status: 'PROCESSING' }
+            data: { status: OrderStatus.PAID }
         });
 
         return NextResponse.json(result);
@@ -69,7 +70,7 @@ export async function GET(req: Request) {
         if (result.trade_status === 'TRADE_SUCCESS') {
             await prisma.order.update({
                 where: { id: outTradeNo },
-                data: { status: 'PAID' }
+                data: { status: OrderStatus.PAID }
             });
         }
 
