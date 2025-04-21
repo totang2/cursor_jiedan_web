@@ -12,6 +12,10 @@ RUN npm install
 RUN npm install jsonwebtoken zod alipay-sdk@3.6.1
 RUN npm install --save-dev @types/jsonwebtoken @types/bcryptjs
 
+# Set environment variables for build
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
+
 # Generate Prisma Client and run migrations
 RUN npx prisma generate
 RUN npx prisma migrate deploy
@@ -40,6 +44,10 @@ COPY package*.json ./
 RUN npm install --production
 RUN npm install jsonwebtoken zod alipay-sdk@3.6.1
 RUN npm install --save-dev @types/jsonwebtoken @types/bcryptjs
+
+# Set environment variables for runtime
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
 
 # Generate Prisma Client and run migrations in production
 RUN npx prisma generate
