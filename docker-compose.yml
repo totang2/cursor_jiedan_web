@@ -13,7 +13,26 @@ services:
       - "3000:3000"
     depends_on:
       - db
+      - db-init
     restart: unless-stopped
+    networks:
+      - app_network
+
+  db-init:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=${DATABASE_URL}
+    command: >
+      sh -c "npm install &&
+             npx prisma generate &&
+             npx prisma migrate deploy"
+    depends_on:
+      - db
+    networks:
+      - app_network
 
   db:
     image: postgres:15-alpine
@@ -23,9 +42,21 @@ services:
       - POSTGRES_DB=${POSTGRES_DB:-devmarketplace}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./prisma/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_network
 
 volumes:
   postgres_data: 
+
+networks:
+  app_network:
+    driver: bridge

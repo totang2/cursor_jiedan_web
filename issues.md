@@ -74,3 +74,4 @@ npm install alipay-sdk
 
 # 部署到服务器
 
+docker-compos up --build
