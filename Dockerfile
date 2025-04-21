@@ -3,52 +3,56 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# 安装依赖
+# Copy package files
 COPY package*.json ./
-RUN npm install --ignore-scripts
+COPY prisma ./prisma/
 
-# 复制源代码
-COPY . .
+# Install dependencies including alipay-sdk
+RUN npm install
+RUN npm install alipay-sdk
 
-# 生成 Prisma 客户端
+# Generate Prisma Client
 RUN npx prisma generate
 
-# 构建应用
+# Copy the rest of the application
+COPY . .
+
+# Build the application
 RUN npm run build
 
-# 生产阶段
+# Production stage
 FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# 安装生产依赖
-COPY package*.json ./
-RUN npm install --only=production --ignore-scripts
-
-# 复制构建产物和必要文件
-COPY --from=builder /app/.next ./.next
+# Copy necessary files from builder
+COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/prisma ./prisma
 
-# 创建非 root 用户
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs && \
-    chown -R nextjs:nodejs /app
+# Install production dependencies only
+COPY package*.json ./
+RUN npm install --production
+RUN npm install alipay-sdk
 
-# 切换到非 root 用户
+# Generate Prisma Client in production
+RUN npx prisma generate
+
+# Create a non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+RUN chown -R nextjs:nodejs /app
+
 USER nextjs
 
-# 设置环境变量
-ENV NODE_ENV=production
-ENV PORT=3000
-
-# 暴露端口
+# Expose the port
 EXPOSE 3000
 
-# 健康检查
+# Add healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
 
-# 启动命令
-CMD ["npm", "start"] 
+# Start the application
+CMD ["node", "server.js"] 
