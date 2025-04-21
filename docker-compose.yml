@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   app:
@@ -6,7 +6,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/devmarketplace
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/dev_marketplace
       - NODE_ENV=production
       - NEXTAUTH_URL=http://localhost:3000
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
@@ -31,9 +31,9 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=devmarketplace
+      - POSTGRES_USER=yuan
+      - POSTGRES_PASSWORD=Passvord2025
+      - POSTGRES_DB=dev_marketplace
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
