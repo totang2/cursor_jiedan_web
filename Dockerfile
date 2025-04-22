@@ -61,12 +61,15 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/@types ./node_modules/@types
 COPY --from=builder /app/server.js ./
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Install production dependencies only
 COPY package*.json ./
 RUN npm install --production
 RUN npm install jsonwebtoken zod alipay-sdk@3.6.1
 RUN npm install --save-dev @types/jsonwebtoken @types/bcryptjs
+RUN npm install @prisma/client
 
 # Set environment variables for runtime
 ARG DATABASE_URL
