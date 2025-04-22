@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    output: 'standalone',
     webpack: (config) => {
         config.externals.push({
             'utf-8-validate': 'commonjs utf-8-validate',
@@ -13,9 +14,6 @@ const nextConfig = {
         '@chakra-ui/icons',
         'framer-motion'
     ],
-    experimental: {
-        serverActions: true,
-    },
     async headers() {
         return [
             {

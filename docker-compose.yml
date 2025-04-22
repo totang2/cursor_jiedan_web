@@ -6,14 +6,24 @@ services:
       context: .
       args:
         - DATABASE_URL=${DATABASE_URL}
+        - ALIPAY_APP_ID=${ALIPAY_APP_ID:-test_app_id}
+        - ALIPAY_PRIVATE_KEY=${ALIPAY_PRIVATE_KEY:-test_private_key}
+        - ALIPAY_PUBLIC_KEY=${ALIPAY_PUBLIC_KEY:-test_public_key}
+        - ALIPAY_ENCRYPT_KEY=${ALIPAY_ENCRYPT_KEY:-test_encrypt_key}
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - NODE_ENV=production
+      - ALIPAY_APP_ID=${ALIPAY_APP_ID:-test_app_id}
+      - ALIPAY_PRIVATE_KEY=${ALIPAY_PRIVATE_KEY:-test_private_key}
+      - ALIPAY_PUBLIC_KEY=${ALIPAY_PUBLIC_KEY:-test_public_key}
+      - ALIPAY_ENCRYPT_KEY=${ALIPAY_ENCRYPT_KEY:-test_encrypt_key}
     ports:
       - "3000:3000"
     depends_on:
       - db
     restart: unless-stopped
+    networks:
+      - app-network
 
   db:
     image: postgres:15-alpine
@@ -26,6 +36,17 @@ services:
     ports:
       - "5432:5432"
     restart: unless-stopped
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
-  postgres_data: 
+  postgres_data:
+
+networks:
+  app-network:
+    driver: bridge
