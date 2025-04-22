@@ -96,22 +96,18 @@ RUN adduser --system --uid 1001 nextjs
 RUN chown -R nextjs:nodejs /app
 
 # Create startup script
-COPY --chown=nextjs:nodejs <<EOF /app/start.sh
-#!/bin/sh
-echo "Waiting for database to be ready..."
-while ! nc -z db 5432; do
-  sleep 1
-done
-echo "Database is ready!"
-
-echo "Running database migrations..."
-npx prisma migrate deploy
-
-echo "Starting the application..."
-node server.js
-EOF
-
-RUN chmod +x /app/start.sh
+RUN echo '#!/bin/sh\n\
+echo "Waiting for database to be ready..."\n\
+while ! nc -z db 5432; do\n\
+  sleep 1\n\
+done\n\
+echo "Database is ready!"\n\
+\n\
+echo "Running database migrations..."\n\
+npx prisma migrate deploy\n\
+\n\
+echo "Starting the application..."\n\
+node server.js' > /app/start.sh && chmod +x /app/start.sh
 
 USER nextjs
 
