@@ -49,8 +49,21 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Install OpenSSL in production
-RUN apk add --no-cache openssl openssl-dev python3 make g++ git busybox-extras netcat-openbsd
+# Install OpenSSL and other required dependencies
+RUN apk add --no-cache \
+    openssl \
+    openssl-dev \
+    python3 \
+    make \
+    g++ \
+    git \
+    busybox-extras \
+    netcat-openbsd \
+    bash \
+    coreutils \
+    procps \
+    dos2unix
+
 RUN npm install -g node-gyp
 
 # Copy necessary files from builder
@@ -93,38 +106,22 @@ RUN npx prisma generate
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
+
+# Copy start script and set permissions
+COPY start.sh /app/start.sh
+# 确保脚本是 Unix 格式
+RUN dos2unix /app/start.sh && \
+    chmod +x /app/start.sh && \
+    chown nextjs:nodejs /app/start.sh
+
+# 设置目录权限
 RUN chown -R nextjs:nodejs /app
 
-# Create startup script
-RUN echo '#!/bin/sh\n\
-echo "Waiting for database to be ready..."\n\
-max_retries=30\n\
-retry_count=0\n\
-while ! nc -z db 5432; do\n\
-  retry_count=$((retry_count+1))\n\
-  if [ $retry_count -ge $max_retries ]; then\n\
-    echo "Database connection failed after $max_retries attempts. Exiting."\n\
-    exit 1\n\
-  fi\n\
-  echo "Waiting for database... ($retry_count/$max_retries)"\n\
-  sleep 2\n\
-done\n\
-echo "Database is ready!"\n\
-\n\
-echo "Running database migrations..."\n\
-npx prisma migrate deploy\n\
-\n\
-echo "Starting the application..."\n\
-exec node server.js' > /app/start.sh && chmod +x /app/start.sh
-
+# 切换到 nextjs 用户
 USER nextjs
 
 # Expose the port
 EXPOSE 3000
 
-# Add healthcheck
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
-
 # Start the application using the startup script
-CMD ["/bin/sh", "/app/start.sh"] 
+CMD ["/bin/bash", "/app/start.sh"] 
