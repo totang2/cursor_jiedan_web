@@ -7,6 +7,10 @@ WORKDIR /app
 RUN apk add --no-cache openssl openssl-dev python3 make g++ git busybox-extras
 RUN npm install -g node-gyp
 
+# 更新 npm 并禁用更新提示
+RUN npm install -g npm@11.3.0 && \
+    npm config set update-notifier false
+
 # 设置 npm 配置
 RUN npm config set registry https://registry.npmmirror.com && \
     npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/ && \
@@ -76,8 +80,10 @@ RUN microdnf update -y && \
     dos2unix \
     && microdnf clean all
 
-# Install node-gyp globally
-RUN npm install -g node-gyp
+# Install node-gyp globally and update npm
+RUN npm install -g node-gyp && \
+    npm install -g npm@11.3.0 && \
+    npm config set update-notifier false
 
 # 设置 npm 配置
 RUN npm config set registry https://registry.npmmirror.com && \
