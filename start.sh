@@ -59,7 +59,7 @@ SERVER_PID=$!
 log "⏳ Waiting for server to start and listen on port 3000..."
 MAX_RETRIES=30
 RETRY_COUNT=0
-while ! nc -z localhost 3000; do
+while ! netstat -tuln | grep -q ":3000 "; do
   RETRY_COUNT=$((RETRY_COUNT + 1))
   log "Attempt $RETRY_COUNT of $MAX_RETRIES: Server not ready yet, waiting..."
   if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
@@ -73,7 +73,7 @@ log "✅ Server is listening on port 3000"
 
 # 健康检查函数
 check_health() {
-  if ! kill -0 $SERVER_PID 2>/dev/null; then
+  if ! ps -p $SERVER_PID > /dev/null; then
     log "❌ Server process $SERVER_PID is not running"
     return 1
   fi

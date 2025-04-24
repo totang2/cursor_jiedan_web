@@ -45,25 +45,27 @@ RUN mkdir -p public
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS runner
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.8
 
 WORKDIR /app
 
-# Install OpenSSL and other required dependencies
-RUN apk add --no-cache \
+# Install necessary system dependencies
+RUN microdnf update -y && \
+    microdnf install -y \
+    nodejs \
+    npm \
     openssl \
-    openssl-dev \
+    openssl-devel \
     python3 \
     make \
-    g++ \
+    gcc-c++ \
     git \
-    busybox-extras \
-    netcat-openbsd \
-    bash \
-    coreutils \
-    procps \
-    dos2unix
+    net-tools \
+    procps-ng \
+    dos2unix \
+    && microdnf clean all
 
+# Install node-gyp globally
 RUN npm install -g node-gyp
 
 # Copy necessary files from builder
@@ -79,10 +81,21 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Install production dependencies only
 COPY package*.json ./
-RUN npm install --production
-RUN npm install jsonwebtoken zod alipay-sdk@3.6.1
-RUN npm install --save-dev @types/jsonwebtoken @types/bcryptjs
-RUN npm install @prisma/client
+
+# 创建临时目录用于 npm 缓存
+RUN mkdir -p /tmp/npm-cache
+
+# 设置 npm 配置
+RUN npm config set cache /tmp/npm-cache --global
+
+# 安装依赖
+RUN npm install --production --no-optional && \
+    npm install jsonwebtoken zod alipay-sdk@3.6.1 && \
+    npm install --save-dev @types/jsonwebtoken @types/bcryptjs && \
+    npm install @prisma/client@5.22.0
+
+# 生成 Prisma 客户端
+RUN npx prisma generate
 
 # Set environment variables for runtime
 ARG DATABASE_URL
@@ -100,16 +113,11 @@ ENV ALIPAY_PUBLIC_KEY=${ALIPAY_PUBLIC_KEY}
 ARG ALIPAY_ENCRYPT_KEY
 ENV ALIPAY_ENCRYPT_KEY=${ALIPAY_ENCRYPT_KEY}
 
-# Generate Prisma Client
-RUN npx prisma generate
-
 # Create a non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN groupadd -r nodejs && useradd -r -g nodejs nextjs
 
 # Copy start script and set permissions
 COPY start.sh /app/start.sh
-# 确保脚本是 Unix 格式
 RUN dos2unix /app/start.sh && \
     chmod +x /app/start.sh && \
     chown nextjs:nodejs /app/start.sh

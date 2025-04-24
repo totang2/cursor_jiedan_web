@@ -75,3 +75,12 @@ npm install alipay-sdk
 # 部署到服务器
 
 docker-compos up --build
+
+
+# mac 上编centos7 docker image
+docker-build.sh
+
+
+  docker builder prune -f
+
+  docker build --no-cache -t cursor_jiedan_web .
