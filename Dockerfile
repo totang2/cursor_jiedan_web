@@ -7,14 +7,25 @@ WORKDIR /app
 RUN apk add --no-cache openssl openssl-dev python3 make g++ git busybox-extras
 RUN npm install -g node-gyp
 
+# 设置 npm 配置
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/ && \
+    npm config set electron_mirror https://npmmirror.com/mirrors/electron/ && \
+    npm config set puppeteer_download_host https://npmmirror.com/mirrors && \
+    npm config set chromedriver_cdnurl https://npmmirror.com/mirrors/chromedriver && \
+    npm config set operadriver_cdnurl https://npmmirror.com/mirrors/operadriver && \
+    npm config set phantomjs_cdnurl https://npmmirror.com/mirrors/phantomjs && \
+    npm config set selenium_cdnurl https://npmmirror.com/mirrors/selenium && \
+    npm config set node_inspector_cdnurl https://npmmirror.com/mirrors/node-inspector
+
 # Copy package files
 COPY package*.json ./
 COPY prisma ./prisma/
 
 # Install dependencies including all required packages and their type definitions
-RUN npm install
-RUN npm install jsonwebtoken zod alipay-sdk@3.6.1
-RUN npm install --save-dev @types/jsonwebtoken @types/bcryptjs
+RUN npm install --no-optional --legacy-peer-deps
+RUN npm install jsonwebtoken zod alipay-sdk@3.6.1 --no-optional --legacy-peer-deps
+RUN npm install --save-dev @types/jsonwebtoken @types/bcryptjs --no-optional --legacy-peer-deps
 
 # Set environment variables for build
 ARG DATABASE_URL
@@ -68,6 +79,17 @@ RUN microdnf update -y && \
 # Install node-gyp globally
 RUN npm install -g node-gyp
 
+# 设置 npm 配置
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/ && \
+    npm config set electron_mirror https://npmmirror.com/mirrors/electron/ && \
+    npm config set puppeteer_download_host https://npmmirror.com/mirrors && \
+    npm config set chromedriver_cdnurl https://npmmirror.com/mirrors/chromedriver && \
+    npm config set operadriver_cdnurl https://npmmirror.com/mirrors/operadriver && \
+    npm config set phantomjs_cdnurl https://npmmirror.com/mirrors/phantomjs && \
+    npm config set selenium_cdnurl https://npmmirror.com/mirrors/selenium && \
+    npm config set node_inspector_cdnurl https://npmmirror.com/mirrors/node-inspector
+
 # Copy necessary files from builder
 COPY --from=builder /app/next.config.js ./
 COPY --from=builder /app/public ./public
@@ -89,10 +111,10 @@ RUN mkdir -p /tmp/npm-cache
 RUN npm config set cache /tmp/npm-cache --global
 
 # 安装依赖
-RUN npm install --production --no-optional && \
-    npm install jsonwebtoken zod alipay-sdk@3.6.1 && \
-    npm install --save-dev @types/jsonwebtoken @types/bcryptjs && \
-    npm install @prisma/client@5.22.0
+RUN npm install --production --no-optional --legacy-peer-deps && \
+    npm install jsonwebtoken zod alipay-sdk@3.6.1 --no-optional --legacy-peer-deps && \
+    npm install --save-dev @types/jsonwebtoken @types/bcryptjs --no-optional --legacy-peer-deps && \
+    npm install @prisma/client@5.22.0 --no-optional --legacy-peer-deps
 
 # 生成 Prisma 客户端
 RUN npx prisma generate
