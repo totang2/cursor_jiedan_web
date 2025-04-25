@@ -8,7 +8,9 @@ chmod 644 "$LOG_FILE"
 
 # 日志函数
 log() {
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$LOG_FILE"
+  local message="[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+  echo "$message" | tee -a "$LOG_FILE"
+  echo "$message" >&2  # 同时输出到 stderr
 }
 
 # 错误处理函数
@@ -112,19 +114,27 @@ log "✅ Server is listening on port 3000"
 
 # 健康检查函数
 check_health() {
-  if ! ps -p $SERVER_PID > /dev/null; then
-    log "❌ Server process $SERVER_PID is not running"
+  # 检查 Node.js 进程是否在运行
+  if ! pgrep -f "node server.js" > /dev/null; then
+    log "❌ Node.js server process not found"
     log "📝 Current process list:"
     ps aux | tee -a "$LOG_FILE"
     return 1
   fi
   
-  # 使用根路径进行健康检查
-  if ! curl -s http://localhost:3000/ > /dev/null; then
-    log "❌ Health check failed"
+  # 检查端口是否在监听
+  if ! netstat -tuln | grep -q ":3000 "; then
+    log "❌ Port 3000 is not listening"
     return 1
   fi
   
+  # 尝试连接服务器
+  if ! curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ 2>/dev/null | grep -q "200\|301\|302"; then
+    log "❌ Server is not responding correctly"
+    return 1
+  fi
+  
+  log "✅ Health check passed"
   return 0
 }
 
