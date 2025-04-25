@@ -149,4 +149,4 @@ USER nextjs
 EXPOSE 3000
 
 # Start the application using the startup script
-CMD ["/bin/bash", "/app/start.sh"] 
+CMD ["sh", "-c", "exec /app/start.sh"] 

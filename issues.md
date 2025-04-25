@@ -105,3 +105,14 @@ apt-get update && apt-get install -y netcat
 在生产阶段（Ubuntu）：
 
 apt-get
+
+
+docker exec -it 3fa115f2025d cat /app/start.sh
+
+docker exec -it 3fa115f2025d head -n 1 /app/start.sh
+
+docker exec -it 3fa115f2025d /app/start.sh
+
+docker exec -it 3fa115f2025d sh -c "echo $SHELL; which sh; which bash"
+
+docker logs 3fa115f2025d

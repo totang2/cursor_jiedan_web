@@ -52,12 +52,32 @@ while ! nc -z db 5432; do
 done
 log "✅ Database is ready!"
 
+# 检查数据库连接
+log "🔍 Testing database connection..."
+if ! npx prisma db execute --query "SELECT 1" > /dev/null 2>&1; then
+  handle_error "Failed to connect to database"
+fi
+log "✅ Database connection successful"
+
 # 运行数据库迁移
 log "🔄 Running database migrations..."
 if ! npx prisma migrate deploy; then
-  handle_error "Database migration failed"
+  log "❌ Migration failed, trying to reset database..."
+  if ! npx prisma migrate reset --force; then
+    handle_error "Database migration and reset failed"
+  fi
 fi
 log "✅ Database migrations completed successfully"
+
+# 验证数据库表
+log "🔍 Verifying database tables..."
+if ! npx prisma db execute --query "SELECT * FROM \"User\" LIMIT 1" > /dev/null 2>&1; then
+  log "❌ User table not found, attempting to create it..."
+  if ! npx prisma db push --force-reset; then
+    handle_error "Failed to create database tables"
+  fi
+fi
+log "✅ Database tables verified"
 
 # 启动服务器
 log "🚀 Starting server..."
@@ -65,8 +85,8 @@ log "📝 Current working directory: $(pwd)"
 log "📝 Server file exists: $(ls -l server.js)"
 log "📝 Node modules directory exists: $(ls -l node_modules)"
 
-# 使用 exec 启动 Node.js 进程
-exec node server.js > "$LOG_FILE" 2>&1 &
+# 使用 exec 启动 Node.js 进程，并确保输出到日志文件
+exec node server.js >> "$LOG_FILE" 2>&1 &
 
 # 获取进程 ID
 SERVER_PID=$!
@@ -99,7 +119,8 @@ check_health() {
     return 1
   fi
   
-  if ! curl -s http://localhost:3000/api/health > /dev/null; then
+  # 使用根路径进行健康检查
+  if ! curl -s http://localhost:3000/ > /dev/null; then
     log "❌ Health check failed"
     return 1
   fi
