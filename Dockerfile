@@ -11,16 +11,7 @@ RUN npm install -g node-gyp
 RUN npm install -g npm@11.3.0 && \
     npm config set update-notifier false
 
-# 设置 npm 配置
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/ && \
-    npm config set electron_mirror https://npmmirror.com/mirrors/electron/ && \
-    npm config set puppeteer_download_host https://npmmirror.com/mirrors && \
-    npm config set chromedriver_cdnurl https://npmmirror.com/mirrors/chromedriver && \
-    npm config set operadriver_cdnurl https://npmmirror.com/mirrors/operadriver && \
-    npm config set phantomjs_cdnurl https://npmmirror.com/mirrors/phantomjs && \
-    npm config set selenium_cdnurl https://npmmirror.com/mirrors/selenium && \
-    npm config set node_inspector_cdnurl https://npmmirror.com/mirrors/node-inspector
+
 
 # Copy package files
 COPY package*.json ./
@@ -64,11 +55,12 @@ FROM ubuntu:22.04
 
 WORKDIR /app
 
-# Install necessary system dependencies
+# Install Node.js 20
 RUN apt-get update && \
+    apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apt-get install -y \
     nodejs \
-    npm \
     openssl \
     libssl-dev \
     python3 \
@@ -86,16 +78,7 @@ RUN npm install -g node-gyp && \
     npm install -g npm@11.3.0 && \
     npm config set update-notifier false
 
-# 设置 npm 配置
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm config set sass_binary_site https://npmmirror.com/mirrors/node-sass/ && \
-    npm config set electron_mirror https://npmmirror.com/mirrors/electron/ && \
-    npm config set puppeteer_download_host https://npmmirror.com/mirrors && \
-    npm config set chromedriver_cdnurl https://npmmirror.com/mirrors/chromedriver && \
-    npm config set operadriver_cdnurl https://npmmirror.com/mirrors/operadriver && \
-    npm config set phantomjs_cdnurl https://npmmirror.com/mirrors/phantomjs && \
-    npm config set selenium_cdnurl https://npmmirror.com/mirrors/selenium && \
-    npm config set node_inspector_cdnurl https://npmmirror.com/mirrors/node-inspector
+
 
 # Copy necessary files from builder
 COPY --from=builder /app/next.config.js ./
