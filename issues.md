@@ -84,3 +84,24 @@ docker-build.sh
   docker builder prune -f
 
   docker build --no-cache -t cursor_jiedan_web .
+
+ ## centos 问题多， 切到生成 ubuntu image
+
+切换到root user， 默认登进去是 User nextjs
+ docker exec -u root -it a23cf726c32 bash 
+  使用apt-get
+
+  测试数据库
+apt-get update && apt-get install -y netcat
+  nc -zv db 5432
+
+
+  apk 是 Alpine Linux 的包管理器，而我们现在使用的是 Ubuntu 22.04 作为基础镜像。
+让我修改 Dockerfile 中的这部分：
+我已经更新了 Dockerfile，主要修改了以下内容：
+在构建阶段（Alpine）：apk
+
+这是正确的，因为构建阶段使用的是 Alpine Linux。
+在生产阶段（Ubuntu）：
+
+apt-get

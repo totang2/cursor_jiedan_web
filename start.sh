@@ -15,6 +15,10 @@ log() {
 handle_error() {
   log "❌ Error occurred: $1"
   log "💡 Container will keep running for debugging"
+  log "📝 Current process list:"
+  ps aux | tee -a "$LOG_FILE"
+  log "📝 Last 50 lines of log:"
+  tail -n 50 "$LOG_FILE" | tee -a "$LOG_FILE"
   tail -f "$LOG_FILE"
   exit 1
 }
@@ -28,6 +32,11 @@ for var in "${required_vars[@]}"; do
     handle_error "Required environment variable $var is not set"
   fi
 done
+
+# 检查 Node.js 版本
+log "📝 Checking Node.js version..."
+node -v | tee -a "$LOG_FILE"
+npm -v | tee -a "$LOG_FILE"
 
 # 等待数据库就绪
 log "⏳ Waiting for database to be ready..."
@@ -52,8 +61,16 @@ log "✅ Database migrations completed successfully"
 
 # 启动服务器
 log "🚀 Starting server..."
-nohup node server.js > "$LOG_FILE" 2>&1 &
+log "📝 Current working directory: $(pwd)"
+log "📝 Server file exists: $(ls -l server.js)"
+log "📝 Node modules directory exists: $(ls -l node_modules)"
+
+# 使用 exec 启动 Node.js 进程
+exec node server.js > "$LOG_FILE" 2>&1 &
+
+# 获取进程 ID
 SERVER_PID=$!
+log "📝 Server started with PID: $SERVER_PID"
 
 # 等待服务器启动
 log "⏳ Waiting for server to start and listen on port 3000..."
@@ -62,6 +79,8 @@ RETRY_COUNT=0
 while ! netstat -tuln | grep -q ":3000 "; do
   RETRY_COUNT=$((RETRY_COUNT + 1))
   log "Attempt $RETRY_COUNT of $MAX_RETRIES: Server not ready yet, waiting..."
+  log "📝 Current process list:"
+  ps aux | tee -a "$LOG_FILE"
   if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
     log "❌ Server not ready after $MAX_RETRIES attempts. Last log entries:"
     tail -n 50 "$LOG_FILE"
@@ -75,6 +94,8 @@ log "✅ Server is listening on port 3000"
 check_health() {
   if ! ps -p $SERVER_PID > /dev/null; then
     log "❌ Server process $SERVER_PID is not running"
+    log "📝 Current process list:"
+    ps aux | tee -a "$LOG_FILE"
     return 1
   fi
   

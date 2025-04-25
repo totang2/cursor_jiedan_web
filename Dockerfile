@@ -4,13 +4,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Install OpenSSL and other required dependencies
-RUN apk add --no-cache openssl openssl-dev python3 make g++ git busybox-extras
+RUN apk add --no-cache openssl openssl-dev python3 make g++ git busybox-extras netcat-openbsd
 RUN npm install -g node-gyp
 
 # 更新 npm 并禁用更新提示
 RUN npm install -g npm@11.3.0 && \
     npm config set update-notifier false
-
 
 
 # Copy package files
@@ -55,7 +54,7 @@ FROM ubuntu:22.04
 
 WORKDIR /app
 
-# Install Node.js 20
+# Install Node.js 20 and required dependencies
 RUN apt-get update && \
     apt-get install -y curl && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
@@ -70,6 +69,7 @@ RUN apt-get update && \
     net-tools \
     procps \
     dos2unix \
+    netcat-openbsd \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -77,7 +77,6 @@ RUN apt-get update && \
 RUN npm install -g node-gyp && \
     npm install -g npm@11.3.0 && \
     npm config set update-notifier false
-
 
 
 # Copy necessary files from builder
@@ -127,6 +126,12 @@ ENV ALIPAY_ENCRYPT_KEY=${ALIPAY_ENCRYPT_KEY}
 
 # Create a non-root user
 RUN groupadd -r nodejs && useradd -r -g nodejs nextjs
+
+# 创建日志目录并设置权限
+RUN mkdir -p /app/logs && \
+    touch /app/server.log && \
+    chown -R nextjs:nodejs /app/logs /app/server.log && \
+    chmod 644 /app/server.log
 
 # Copy start script and set permissions
 COPY start.sh /app/start.sh
