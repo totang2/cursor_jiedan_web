@@ -1,5 +1,5 @@
 #!/bin/bash
-set -euo pipefail
+set -eu
 
 # 设置日志文件
 LOG_FILE="/app/server.log"

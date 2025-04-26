@@ -83,6 +83,8 @@ docker-build.sh
 
   docker builder prune -f
 
+  docker system prune -f
+
   docker build --no-cache -t cursor_jiedan_web .
 
  ## centos 问题多， 切到生成 ubuntu image
@@ -118,3 +120,47 @@ docker exec -it 3fa115f2025d sh -c "echo $SHELL; which sh; which bash"
 docker logs 3fa115f2025d
 
 docker exec -it 40071f47a734 /app/start.sh
+
+
+
+
+
+
+# 充电项目
+
+市场需求
+24年用户 7.6亿 点位 500万 营业额 589万
+
+盈利模式
+
+一劳永逸，没有赊账
+
+传统充电宝的问题
+不好还
+收费高
+充电效率低
+寿命低
+
+
+
+
+
+使用方式
+还需要配个 有线充电宝？部署？
+
+一个充电宝的成本是多少
+
+
+
+# 视频搬运项目
+20250426 启动
+
+1. download yt-download
+2. publish https://linux.do/t/topic/110273 或者工作流， manus
+3. 去水印
+4. ffmpeg 分离声音视频
+5. whisper 转文字
+6. AI翻译
+7. 加字幕
+8. 加中文人声/数字人
+9. 剪影合成 ffmpeg 合成
