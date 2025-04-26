@@ -56,7 +56,7 @@ log "✅ Database is ready!"
 
 # 检查数据库连接
 log "🔍 Testing database connection..."
-if ! npx prisma db execute --query "SELECT 1" > /dev/null 2>&1; then
+if ! npx prisma db execute --stdin <<< "SELECT 1" > /dev/null 2>&1; then
   handle_error "Failed to connect to database"
 fi
 log "✅ Database connection successful"
@@ -73,7 +73,7 @@ log "✅ Database migrations completed successfully"
 
 # 验证数据库表
 log "🔍 Verifying database tables..."
-if ! npx prisma db execute --query "SELECT * FROM \"User\" LIMIT 1" > /dev/null 2>&1; then
+if ! npx prisma db execute --stdin <<< "SELECT * FROM \"User\" LIMIT 1" > /dev/null 2>&1; then
   log "❌ User table not found, attempting to create it..."
   if ! npx prisma db push --force-reset; then
     handle_error "Failed to create database tables"
