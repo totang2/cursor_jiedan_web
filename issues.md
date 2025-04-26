@@ -116,3 +116,5 @@ docker exec -it 3fa115f2025d /app/start.sh
 docker exec -it 3fa115f2025d sh -c "echo $SHELL; which sh; which bash"
 
 docker logs 3fa115f2025d
+
+docker exec -it 40071f47a734 /app/start.sh
