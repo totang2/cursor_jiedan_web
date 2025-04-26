@@ -56,7 +56,25 @@ log "✅ Database is ready!"
 
 # 检查数据库连接
 log "🔍 Testing database connection..."
-if ! npx prisma db execute --stdin <<< "SELECT 1" > /dev/null 2>&1; then
+log "📝 DATABASE_URL: ${DATABASE_URL}"
+log "📝 NODE_ENV: ${NODE_ENV}"
+
+# 尝试直接使用 psql 测试连接
+if command -v psql >/dev/null 2>&1; then
+  log "📝 Testing with psql..."
+  if ! PGPASSWORD=$(echo "$DATABASE_URL" | grep -oP 'password=\K[^@]+') psql -h db -p 5432 -U postgres -c "SELECT 1" > /dev/null 2>&1; then
+    log "❌ psql connection failed"
+  else
+    log "✅ psql connection successful"
+  fi
+fi
+
+# 尝试使用 Prisma 测试连接
+log "📝 Testing with Prisma..."
+if ! npx prisma db execute --stdin <<< "SELECT 1" 2>> "$LOG_FILE"; then
+  log "❌ Prisma connection failed"
+  log "📝 Prisma error output:"
+  npx prisma db execute --stdin <<< "SELECT 1" 2>&1 | tee -a "$LOG_FILE"
   handle_error "Failed to connect to database"
 fi
 log "✅ Database connection successful"
