@@ -40,6 +40,9 @@ npm install
 复制 `.env.example` 文件为 `.env` 并填写必要的环境变量：
 ```bash
 cp .env.example .env
+
+# DATABASE_URL=postgresql://yuan:Passvord2025@db:5432/dev_marketplace
+DATABASE_URL=postgresql://yuan:Passvord2025@localhost:5432/dev_marketplace
 ```
 
 4. 初始化数据库

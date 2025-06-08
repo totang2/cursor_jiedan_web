@@ -119,20 +119,26 @@ export default function ProfilePage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSaving(true);
-
+    
         try {
+            // 确保hourlyRate是数字类型
+            const dataToSubmit = {
+                ...profile,
+                hourlyRate: parseFloat(profile.hourlyRate.toString()) || 0
+            };
+            
             const response = await fetch('/api/profile', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(profile),
+                body: JSON.stringify(dataToSubmit),
             });
-
+    
             if (!response.ok) {
                 throw new Error('更新个人资料失败');
             }
-
+    
             toast({
                 title: '保存成功',
                 description: '您的个人资料已更新',
@@ -260,7 +266,13 @@ export default function ProfilePage() {
                                     name="hourlyRate"
                                     type="number"
                                     value={profile.hourlyRate}
-                                    onChange={handleChange}
+                                    onChange={(e) => {
+                                        const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                                        setProfile(prev => ({
+                                            ...prev,
+                                            hourlyRate: value
+                                        }));
+                                    }}
                                     placeholder="0"
                                 />
                             </FormControl>
@@ -284,4 +296,4 @@ export default function ProfilePage() {
             </VStack>
         </Container>
     );
-} 
+}

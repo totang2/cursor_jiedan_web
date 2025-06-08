@@ -105,13 +105,20 @@ export default function ProjectDetailPage() {
 
   const handleApply = async () => {
     if (!params?.id) return;
-
+    setIsSubmitting(true);
+  
     try {
       const response = await fetch(`/api/projects/${params.id}/apply`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message }), // 使用用户输入的消息
       });
       if (!response.ok) {
-        throw new Error('Failed to apply for project');
+        // 尝试解析服务端返回的错误信息
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to apply for project');
       }
       toast({
         title: 'Success',
@@ -120,15 +127,19 @@ export default function ProjectDetailPage() {
         duration: 5000,
         isClosable: true,
       });
+      onClose(); // 关闭弹框
+      setMessage(''); // 清空消息
     } catch (error) {
       console.error('Error applying for project:', error);
       toast({
         title: 'Error',
-        description: 'Failed to submit application',
+        description: error.message || 'Failed to submit application',
         status: 'error',
         duration: 5000,
         isClosable: true,
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -270,4 +281,4 @@ export default function ProjectDetailPage() {
       </VStack>
     </Container>
   );
-} 
+}

@@ -155,6 +155,24 @@ docker exec -it 40071f47a734 /app/start.sh
 # 视频搬运项目
 20250426 启动
 
+## 开源视频搬运 项目调研
+
+### VideoLingo
+```
+git@github.com:Huanshere/VideoLingo.git
+
+
+```
+install miniconda on mac
+
+```
+#https://www.anaconda.com/docs/getting-started/miniconda/install#mac-os
+mkdir -p ~/miniconda3
+curl https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-arm64.sh -o ~/miniconda3/miniconda.sh
+bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+rm ~/miniconda3/miniconda.sh
+```
+
 1. download yt-download
 2. publish https://linux.do/t/topic/110273 或者工作流， manus
 3. 去水印
