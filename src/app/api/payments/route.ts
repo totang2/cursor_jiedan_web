@@ -12,8 +12,8 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { orderId, amount } = await req.json();
-        if (!orderId || !amount) {
+        const { orderId } = await req.json();
+        if (!orderId) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
@@ -29,6 +29,8 @@ export async function POST(req: Request) {
         if (order.status !== OrderStatus.PENDING) {
             return NextResponse.json({ error: 'Order cannot be paid' }, { status: 400 });
         }
+
+        const amount = order.amount; // 从订单中获取金额
 
         const result = await alipay.execute('alipay.trade.page.pay', {
             out_trade_no: order.id,
@@ -82,4 +84,4 @@ export async function GET(req: Request) {
             { status: 500 }
         );
     }
-} 
+}
