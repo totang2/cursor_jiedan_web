@@ -11,7 +11,7 @@ export async function POST(req: Request) {
         // 验证通知签名
         const isValid = await alipay.checkNotifySign(params);
         if (!isValid) {
-            return new NextResponse('Invalid signature', { status: 400 });
+            return Response.json('Invalid signature', { status: 400 });
         }
 
         const { out_trade_no: orderId, trade_status: tradeStatus, trade_no: tradeNo } = params;
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
             });
 
             if (!order) {
-                return new NextResponse('Order not found', { status: 404 });
+                return Response.json('Order not found', { status: 404 });
             }
 
             // 如果订单状态为待支付，则更新订单状态
@@ -51,9 +51,9 @@ export async function POST(req: Request) {
         }
 
         // 返回成功响应给支付宝
-        return new NextResponse('success', { status: 200 });
+        return Response.json('success', { status: 200 });
     } catch (error) {
         console.error('Payment notification error:', error);
-        return new NextResponse('Internal Server Error', { status: 500 });
+        return Response.json('Internal Server Error', { status: 500 });
     }
 } 
