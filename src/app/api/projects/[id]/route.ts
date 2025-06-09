@@ -12,7 +12,7 @@ export async function GET(
         const projectId = params.id;
 
         if (!projectId) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '项目ID不能为空' },
                 { status: 400 }
             );
@@ -55,16 +55,16 @@ export async function GET(
         });
 
         if (!project) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '项目不存在' },
                 { status: 404 }
             );
         }
 
-        return NextResponse.json(project);
+        return Response.json(project);
     } catch (error) {
         console.error('获取项目详情失败:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: '获取项目详情失败' },
             { status: 500 }
         );
@@ -78,7 +78,7 @@ export async function DELETE(
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '请先登录' },
                 { status: 401 }
             );
@@ -92,7 +92,7 @@ export async function DELETE(
         });
 
         if (!project) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '项目不存在' },
                 { status: 404 }
             );
@@ -100,7 +100,7 @@ export async function DELETE(
 
         // 检查是否是项目所有者
         if (project.clientId !== session.user.id) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '无权删除此项目' },
                 { status: 403 }
             );
@@ -111,10 +111,10 @@ export async function DELETE(
             where: { id: projectId },
         });
 
-        return NextResponse.json({ success: true });
+        return Response.json({ success: true });
     } catch (error) {
         console.error('删除项目失败:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: '删除项目失败' },
             { status: 500 }
         );

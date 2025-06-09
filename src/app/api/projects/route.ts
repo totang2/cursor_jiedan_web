@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
         if (!session) {
             console.log('No session found');
-            return NextResponse.json(
+            return Response.json(
                 { error: '未登录' },
                 { status: 401 }
             );
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
         if (!session.user?.email) {
             console.log('No user email in session');
-            return NextResponse.json(
+            return Response.json(
                 { error: '未授权访问' },
                 { status: 401 }
             );
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
 
         // 验证必填字段
         if (!title || !description || !budget || !deadline || !category || !skills) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '请填写所有必填字段' },
                 { status: 400 }
             );
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
         console.log('Found user:', user);
 
         if (!user) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '用户不存在' },
                 { status: 404 }
             );
@@ -88,11 +88,14 @@ export async function POST(request: Request) {
 
         console.log('Created project:', projectWithClient);
 
-        return NextResponse.json(projectWithClient);
+        return Response.json(projectWithClient);
     } catch (error) {
         console.error('项目创建失败:', error);
-        return NextResponse.json(
-            { error: '项目创建失败', details: error instanceof Error ? error.message : '未知错误' },
+        return Response.json(
+            { 
+                error: '项目创建失败', 
+                details: error instanceof Error ? error.message : '未知错误' 
+            },
             { status: 500 }
         );
     }
@@ -115,10 +118,10 @@ export async function GET() {
             },
         });
 
-        return NextResponse.json(projects);
+        return Response.json(projects);
     } catch (error) {
         console.error('获取项目列表失败:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: '获取项目列表失败' },
             { status: 500 }
         );

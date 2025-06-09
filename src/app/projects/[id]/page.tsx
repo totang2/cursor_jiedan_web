@@ -106,7 +106,7 @@ export default function ProjectDetailPage() {
   const handleApply = async () => {
     if (!params?.id) return;
     setIsSubmitting(true);
-  
+
     try {
       const response = await fetch(`/api/projects/${params.id}/apply`, {
         method: 'POST',
@@ -133,7 +133,7 @@ export default function ProjectDetailPage() {
       console.error('Error applying for project:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to submit application',
+        description: error instanceof Error ? error.message : 'Failed to submit application',
         status: 'error',
         duration: 5000,
         isClosable: true,

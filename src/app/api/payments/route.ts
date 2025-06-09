@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import { alipay } from '@/lib/alipay';
+import { alipay, AlipayFormData } from '@/lib/alipay';
 import { prisma } from '@/lib/prisma';
 import { OrderStatus } from '@prisma/client';
 
@@ -9,12 +9,12 @@ export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { orderId } = await req.json();
         if (!orderId) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+            return Response.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
         const order = await prisma.order.findUnique({
@@ -23,32 +23,40 @@ export async function POST(req: Request) {
         });
 
         if (!order) {
-            return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+            return Response.json({ error: 'Order not found' }, { status: 404 });
         }
 
         if (order.status !== OrderStatus.PENDING) {
-            return NextResponse.json({ error: 'Order cannot be paid' }, { status: 400 });
+            return Response.json({ error: 'Order cannot be paid' }, { status: 400 });
         }
 
-        const amount = order.amount; // 从订单中获取金额
-
-        const result = await alipay.execute('alipay.trade.page.pay', {
+        // 确保金额格式正确（两位小数的字符串）
+        const formattedAmount = Number(order.amount).toFixed(2);
+        
+        // 使用AlipayFormData创建表单
+        const formData = new AlipayFormData();
+        formData.setMethod('get');
+        
+        // 设置回调通知地址
+        formData.addField('notifyUrl', `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/notify`);
+        formData.addField('returnUrl', `${process.env.NEXT_PUBLIC_APP_URL}/payments/success`);
+        
+        formData.addField('bizContent', {
             out_trade_no: order.id,
-            total_amount: amount,
+            total_amount: formattedAmount,
             subject: order.project.title,
             product_code: 'FAST_INSTANT_TRADE_PAY'
         });
-
-        await prisma.order.update({
-            where: { id: orderId },
-            data: { status: OrderStatus.PAID }
-        });
-
-        return NextResponse.json(result);
+        
+        // 使用正确的方法执行支付页面请求
+        const result = await alipay.exec('alipay.trade.page.pay', {}, { formData: formData });
+        
+        // 返回支付URL给前端
+        return Response.json({ payUrl: result });
     } catch (error) {
         console.error('Payment error:', error);
-        return NextResponse.json(
-            { error: 'Failed to process payment' },
+        return Response.json(
+            { error: error instanceof Error ? `支付处理失败: ${error.message}` : 'Failed to process payment' },
             { status: 500 }
         );
     }
@@ -61,7 +69,7 @@ export async function GET(req: Request) {
         const tradeNo = searchParams.get('trade_no');
 
         if (!outTradeNo || !tradeNo) {
-            return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
+            return Response.json({ error: 'Missing parameters' }, { status: 400 });
         }
 
         const result = await alipay.execute('alipay.trade.query', {
@@ -76,10 +84,10 @@ export async function GET(req: Request) {
             });
         }
 
-        return NextResponse.json(result);
+        return Response.json(result);
     } catch (error) {
         console.error('Payment query error:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: 'Failed to query payment status' },
             { status: 500 }
         );

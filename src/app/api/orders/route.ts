@@ -7,12 +7,12 @@ export async function POST(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { projectId } = await req.json();
         if (!projectId) {
-            return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+            return Response.json({ error: 'Project ID is required' }, { status: 400 });
         }
 
         const user = await prisma.user.findUnique({
@@ -20,7 +20,7 @@ export async function POST(req: Request) {
         });
 
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return Response.json({ error: 'User not found' }, { status: 404 });
         }
 
         // 查找项目
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
         });
 
         if (!project) {
-            return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+            return Response.json({ error: 'Project not found' }, { status: 404 });
         }
 
         // 检查是否已经存在未支付的订单
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
         });
 
         if (existingOrder) {
-            return NextResponse.json({ orderId: existingOrder.id });
+            return Response.json({ orderId: existingOrder.id });
         }
 
         // 创建新订单
@@ -57,10 +57,10 @@ export async function POST(req: Request) {
 
         console.log('order', order);
 
-        return NextResponse.json({ orderId: order.id });
+        return Response.json({ orderId: order.id });
     } catch (error) {
         console.error('Order creation error:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: 'Failed to create order' },
             { status: 500 }
         );
@@ -71,7 +71,7 @@ export async function GET(req: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const user = await prisma.user.findUnique({
@@ -79,7 +79,7 @@ export async function GET(req: Request) {
         });
 
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return Response.json({ error: 'User not found' }, { status: 404 });
         }
 
         // 获取用户的所有订单
@@ -92,10 +92,10 @@ export async function GET(req: Request) {
             orderBy: { createdAt: 'desc' },
         });
 
-        return NextResponse.json(orders);
+        return Response.json(orders);
     } catch (error) {
         console.error('Order fetch error:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: 'Failed to fetch orders' },
             { status: 500 }
         );
