@@ -11,7 +11,7 @@ export async function GET(
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const user = await prisma.user.findUnique({
@@ -19,7 +19,7 @@ export async function GET(
         });
 
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return Response.json({ error: 'User not found' }, { status: 404 });
         }
 
         // Verify user is part of the chat
@@ -35,7 +35,7 @@ export async function GET(
         });
 
         if (!chat) {
-            return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
+            return Response.json({ error: 'Chat not found' }, { status: 404 });
         }
 
         // Get messages and mark unread messages as read
@@ -92,7 +92,7 @@ export async function GET(
             },
         });
 
-        return NextResponse.json({
+        return Response.json({
             messages: messages.map(msg => ({
                 id: msg.id,
                 content: msg.content,
@@ -103,7 +103,7 @@ export async function GET(
         });
     } catch (error) {
         console.error('Error fetching messages:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: 'Internal server error' },
             { status: 500 }
         );
@@ -118,7 +118,7 @@ export async function POST(
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const user = await prisma.user.findUnique({
@@ -126,7 +126,7 @@ export async function POST(
         });
 
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return Response.json({ error: 'User not found' }, { status: 404 });
         }
 
         // Verify user is part of the chat
@@ -142,12 +142,12 @@ export async function POST(
         });
 
         if (!chat) {
-            return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
+            return Response.json({ error: 'Chat not found' }, { status: 404 });
         }
 
         const { content } = await request.json();
         if (!content) {
-            return NextResponse.json(
+            return Response.json(
                 { error: 'Message content is required' },
                 { status: 400 }
             );
@@ -178,10 +178,10 @@ export async function POST(
             data: { updatedAt: new Date() },
         });
 
-        return NextResponse.json(message);
+        return Response.json(message);
     } catch (error) {
         console.error('Error sending message:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: 'Internal server error' },
             { status: 500 }
         );

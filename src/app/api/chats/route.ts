@@ -8,7 +8,7 @@ export async function GET() {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const user = await prisma.user.findUnique({
@@ -16,7 +16,7 @@ export async function GET() {
         });
 
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return Response.json({ error: 'User not found' }, { status: 404 });
         }
 
         const chats = await prisma.chat.findMany({
@@ -60,10 +60,10 @@ export async function GET() {
             updatedAt: chat.updatedAt,
         }));
 
-        return NextResponse.json(formattedChats);
+        return Response.json(formattedChats);
     } catch (error) {
         console.error('Error fetching chats:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: 'Internal server error' },
             { status: 500 }
         );
@@ -75,12 +75,12 @@ export async function POST(request: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { userId } = await request.json();
         if (!userId) {
-            return NextResponse.json(
+            return Response.json(
                 { error: 'User ID is required' },
                 { status: 400 }
             );
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
         });
 
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            return Response.json({ error: 'User not found' }, { status: 404 });
         }
 
         // Check if chat already exists
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
         });
 
         if (existingChat) {
-            return NextResponse.json(existingChat);
+            return Response.json(existingChat);
         }
 
         // Create new chat
@@ -132,10 +132,10 @@ export async function POST(request: Request) {
             },
         });
 
-        return NextResponse.json(newChat);
+        return Response.json(newChat);
     } catch (error) {
         console.error('Error creating chat:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: 'Internal server error' },
             { status: 500 }
         );

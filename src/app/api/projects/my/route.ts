@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '请先登录' },
                 { status: 401 }
             );
@@ -44,10 +44,10 @@ export async function GET(request: Request) {
             },
         });
 
-        return NextResponse.json(projects);
+        return Response.json(projects);
     } catch (error) {
         console.error('获取我的项目失败:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: '获取我的项目失败' },
             { status: 500 }
         );

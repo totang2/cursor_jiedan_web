@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         // 验证请求数据
         const validationResult = registerSchema.safeParse(body);
         if (!validationResult.success) {
-            return NextResponse.json(
+            return Response.json(
                 { error: validationResult.error.errors[0].message },
                 { status: 400 }
             );
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
         });
 
         if (existingUser) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '该邮箱已被注册' },
                 { status: 400 }
             );
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
         });
 
         // 返回成功响应（不包含密码）
-        return NextResponse.json({
+        return Response.json({
             success: true,
             user: {
                 id: result.id,
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
 
     } catch (error) {
         console.error('Registration error:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: '注册失败，请稍后重试' },
             { status: 500 }
         );

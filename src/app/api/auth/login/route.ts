@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
         // 验证请求数据
         if (!email || !password) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '邮箱和密码不能为空' },
                 { status: 400 }
             );
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
         // 如果用户不存在
         if (!user) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '邮箱或密码错误' },
                 { status: 401 }
             );
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
         // 验证密码
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '邮箱或密码错误' },
                 { status: 401 }
             );
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
         );
 
         // 返回成功响应
-        return NextResponse.json({
+        return Response.json({
             success: true,
             user: {
                 id: user.id,
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         });
     } catch (error) {
         console.error('Login error:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: '服务器错误' },
             { status: 500 }
         );

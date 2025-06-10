@@ -10,7 +10,7 @@ export async function POST(
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '请先登录' },
                 { status: 401 }
             );
@@ -25,7 +25,7 @@ export async function POST(
         });
 
         if (!project) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '项目不存在' },
                 { status: 404 }
             );
@@ -33,7 +33,7 @@ export async function POST(
 
         // 检查项目状态
         if (project.status !== 'OPEN') {
-            return NextResponse.json(
+            return Response.json(
                 { error: '该项目已不再接受申请' },
                 { status: 400 }
             );
@@ -48,7 +48,7 @@ export async function POST(
         });
 
         if (existingApplication) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '你已经申请过这个项目了' },
                 { status: 400 }
             );
@@ -64,10 +64,10 @@ export async function POST(
             },
         });
 
-        return NextResponse.json(application);
+        return Response.json(application);
     } catch (error) {
         console.error('申请项目失败:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: '申请项目失败' },
             { status: 500 }
         );

@@ -10,7 +10,7 @@ export async function PATCH(
     try {
         const session = await getServerSession(authOptions);
         if (!session?.user) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '请先登录' },
                 { status: 401 }
             );
@@ -25,7 +25,7 @@ export async function PATCH(
         });
 
         if (!project) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '项目不存在' },
                 { status: 404 }
             );
@@ -33,7 +33,7 @@ export async function PATCH(
 
         // 检查是否是项目所有者
         if (project.clientId !== session.user.id) {
-            return NextResponse.json(
+            return Response.json(
                 { error: '无权修改此项目' },
                 { status: 403 }
             );
@@ -45,10 +45,10 @@ export async function PATCH(
             data: { status },
         });
 
-        return NextResponse.json(updatedProject);
+        return Response.json(updatedProject);
     } catch (error) {
         console.error('更新项目状态失败:', error);
-        return NextResponse.json(
+        return Response.json(
             { error: '更新项目状态失败' },
             { status: 500 }
         );

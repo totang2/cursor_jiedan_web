@@ -56,6 +56,12 @@ npx prisma db push
 npm run dev
 ```
 
+```
+# 支付宝产品环境， 不使用dev
+npm run build
+npm start
+```
+
 访问 http://localhost:3000 查看应用。
 
 ## Docker 部署
