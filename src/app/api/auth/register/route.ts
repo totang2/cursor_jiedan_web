@@ -3,6 +3,8 @@ import type { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
 
 const prisma = new PrismaClient();
 
@@ -11,6 +13,7 @@ const registerSchema = z.object({
     username: z.string().min(2, '用户名至少需要2个字符'),
     email: z.string().email('请输入有效的邮箱地址'),
     password: z.string().min(6, '密码至少需要6个字符'),
+    role: z.enum(['DEVELOPER', 'CLIENT', 'ADMIN']).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -26,7 +29,30 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const { username, email, password } = validationResult.data;
+        const { username, email, password, role = 'DEVELOPER' } = validationResult.data;
+
+        // 如果要创建管理员用户，需要验证当前用户是否为管理员
+        if (role === 'ADMIN') {
+            const session = await getServerSession(authOptions);
+            if (!session?.user) {
+                return Response.json(
+                    { error: '未登录' },
+                    { status: 401 }
+                );
+            }
+
+            // 检查当前用户是否为管理员
+            const currentUser = await prisma.user.findUnique({
+                where: { email: session.user.email },
+            });
+
+            if (!currentUser || currentUser.role !== 'ADMIN') {
+                return Response.json(
+                    { error: '没有权限创建管理员用户' },
+                    { status: 403 }
+                );
+            }
+        }
 
         // 检查邮箱是否已被注册
         const existingUser = await prisma.user.findUnique({
@@ -51,7 +77,7 @@ export async function POST(request: NextRequest) {
                     email,
                     name: username,
                     password: hashedPassword,
-                    role: 'DEVELOPER',
+                    role: role,
                 },
             });
 
