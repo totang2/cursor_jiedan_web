@@ -87,7 +87,7 @@ check_health() {
     info "检查服务健康状态..."
     sleep 10  # 等待服务启动
     
-    if curl -s http://localhost:3000/api/health > /dev/null; then
+    if curl -s http://43.139.115.112/api/health > /dev/null; then
         info "服务健康检查通过"
     else
         warn "服务健康检查失败，请检查日志"
