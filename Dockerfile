@@ -1,8 +1,7 @@
-LABEL version="1.0.0"
-LABEL maintainer="tang7yuan@126.com" 
-
 # 构建阶段
 FROM node:20-alpine AS builder
+
+LABEL maintainer="tang7yuan@126.com"
 
 WORKDIR /app
 
@@ -10,10 +9,10 @@ WORKDIR /app
 RUN apk add --no-cache openssl openssl-dev python3 make g++ git busybox-extras netcat-openbsd
 RUN npm install -g node-gyp
 
-# 更新 npm 并禁用更新提示
-RUN npm install -g npm@11.3.0 && \
+# 设置 npm 镜像源并更新 npm
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g npm@11.3.0 && \
     npm config set update-notifier false
-
 
 # Copy package files
 COPY package*.json ./
@@ -77,10 +76,10 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Install node-gyp globally and update npm
-RUN npm install -g node-gyp && \
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g node-gyp && \
     npm install -g npm@11.3.0 && \
     npm config set update-notifier false
-
 
 # Copy necessary files from builder
 COPY --from=builder /app/next.config.js ./
