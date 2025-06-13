@@ -5,13 +5,14 @@ LABEL maintainer="tang7yuan@126.com"
 
 WORKDIR /app
 
-# Install OpenSSL and other required dependencies
-RUN apk add --no-cache openssl openssl-dev python3 make g++ git busybox-extras netcat-openbsd
-RUN npm install -g node-gyp
+# 设置 npm 镜像源
+RUN npm config set registry https://mirrors.cloud.tencent.com/npm/
 
-# 设置 npm 镜像源并更新 npm
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm install -g npm@11.3.0 && \
+# 只安装必要的构建依赖
+RUN apk add --no-cache python3 make g++ git
+
+# 更新 npm
+RUN npm install -g npm@11.3.0 && \
     npm config set update-notifier false
 
 # Copy package files
@@ -52,32 +53,15 @@ RUN mkdir -p public
 RUN npm run build
 
 # Production stage
-FROM ubuntu:22.04
+FROM node:20-alpine
 
 WORKDIR /app
 
-# Install Node.js 20 and required dependencies
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
-    apt-get install -y \
-    nodejs \
-    openssl \
-    libssl-dev \
-    python3 \
-    make \
-    g++ \
-    git \
-    net-tools \
-    procps \
-    dos2unix \
-    netcat-openbsd \
-    && apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# 只安装必要的运行时依赖
+RUN apk add --no-cache openssl busybox-extras netcat-openbsd
 
-# Install node-gyp globally and update npm
-RUN npm config set registry https://registry.npmmirror.com && \
-    npm install -g node-gyp && \
+# 设置 npm 镜像源
+RUN npm config set registry https://mirrors.cloud.tencent.com/npm/ && \
     npm install -g npm@11.3.0 && \
     npm config set update-notifier false
 
@@ -127,7 +111,7 @@ ARG ALIPAY_ENCRYPT_KEY
 ENV ALIPAY_ENCRYPT_KEY=${ALIPAY_ENCRYPT_KEY}
 
 # Create a non-root user
-RUN groupadd -r nodejs && useradd -r -g nodejs nextjs
+RUN addgroup -S nodejs && adduser -S nextjs -G nodejs
 
 # 创建日志目录并设置权限
 RUN mkdir -p /app/logs && \
@@ -137,8 +121,7 @@ RUN mkdir -p /app/logs && \
 
 # Copy start script and set permissions
 COPY start.sh /app/start.sh
-RUN dos2unix /app/start.sh && \
-    chmod +x /app/start.sh && \
+RUN chmod +x /app/start.sh && \
     chown nextjs:nodejs /app/start.sh
 
 # 设置目录权限
