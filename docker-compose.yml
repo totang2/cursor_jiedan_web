@@ -1,40 +1,56 @@
-version: '3.3'
+version: '3.8'
 
 services:
   app:
     build:
       context: .
+      dockerfile: Dockerfile
       args:
         - DATABASE_URL=${DATABASE_URL}
-        - ALIPAY_APP_ID=${ALIPAY_APP_ID:-test_app_id}
-        - ALIPAY_PRIVATE_KEY=${ALIPAY_PRIVATE_KEY:-test_private_key}
-        - ALIPAY_PUBLIC_KEY=${ALIPAY_PUBLIC_KEY:-test_public_key}
-        - ALIPAY_ENCRYPT_KEY=${ALIPAY_ENCRYPT_KEY:-test_encrypt_key}
+        - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+        - NEXTAUTH_URL=${NEXTAUTH_URL}
+        - ALIPAY_APP_ID=${ALIPAY_APP_ID}
+        - ALIPAY_PRIVATE_KEY=${ALIPAY_PRIVATE_KEY}
+        - ALIPAY_PUBLIC_KEY=${ALIPAY_PUBLIC_KEY}
+        - ALIPAY_ENCRYPT_KEY=${ALIPAY_ENCRYPT_KEY}
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - NODE_ENV=production
-      - ALIPAY_APP_ID=${ALIPAY_APP_ID:-test_app_id}
-      - ALIPAY_PRIVATE_KEY=${ALIPAY_PRIVATE_KEY:-test_private_key}
-      - ALIPAY_PUBLIC_KEY=${ALIPAY_PUBLIC_KEY:-test_public_key}
-      - ALIPAY_ENCRYPT_KEY=${ALIPAY_ENCRYPT_KEY:-test_encrypt_key}
-      - DEBUG=*
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - ALIPAY_APP_ID=${ALIPAY_APP_ID}
+      - ALIPAY_PRIVATE_KEY=${ALIPAY_PRIVATE_KEY}
+      - ALIPAY_PUBLIC_KEY=${ALIPAY_PUBLIC_KEY}
+      - ALIPAY_ENCRYPT_KEY=${ALIPAY_ENCRYPT_KEY}
     ports:
       - "3000:3000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - app-network
-    tty: true
-    stdin_open: true
-    entrypoint: ["/bin/sh", "-c", "tail -f /dev/null"]
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
   db:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_USER=yuan
-      - POSTGRES_PASSWORD=Passvord2025
-      - POSTGRES_DB=dev_marketplace
+      - POSTGRES_USER=${POSTGRES_USER:-yuan}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-Passvord2025}
+      - POSTGRES_DB=${POSTGRES_DB:-dev_marketplace}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -43,14 +59,24 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U yuan -d dev_marketplace"]
-      interval: 5s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-yuan} -d ${POSTGRES_DB:-dev_marketplace}"]
+      interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
     command: postgres -c 'max_connections=1000'
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
 volumes:
   postgres_data:
+    driver: local
 
 networks:
   app-network:

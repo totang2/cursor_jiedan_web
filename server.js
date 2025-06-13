@@ -57,7 +57,7 @@ async function startServer() {
             path: '/api/socket',
             addTrailingSlash: false,
             cors: {
-                origin: ['http://localhost:3000', 'http://localhost:3001'],
+                origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:3000'],
                 methods: ['GET', 'POST', 'OPTIONS'],
                 credentials: true,
             },

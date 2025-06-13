@@ -1,3 +1,6 @@
+LABEL version="1.0.0"
+LABEL maintainer="tang7yuan@126.com" 
+
 # 构建阶段
 FROM node:20-alpine AS builder
 
@@ -149,4 +152,5 @@ USER nextjs
 EXPOSE 3000
 
 # Start the application using the startup script
-CMD ["/app/start.sh"] 
+CMD ["/app/start.sh"]
+
