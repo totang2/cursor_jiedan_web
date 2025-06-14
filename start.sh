@@ -73,30 +73,37 @@ check_db_connection() {
   else
     log "✅ psql connection successful"
   fi
-  
-  # 使用 Prisma 测试连接
-  log "📝 Testing with Prisma..."
-  if ! npx prisma db pull > /dev/null 2>&1; then
-    log "❌ Prisma connection failed, attempting to initialize database..."
-    if ! npx prisma db push --accept-data-loss; then
-      handle_error "Prisma database initialization failed"
-    fi
-    log "✅ Database initialized successfully"
-  else
-    log "✅ Prisma database connection successful"
-  fi
 }
 
-# 运行数据库迁移
-run_migrations() {
-  log "🔄 Running database migrations..."
+# 初始化数据库
+init_database() {
+  log "🔄 Initializing database..."
+  
+  # 生成 Prisma 客户端
+  log "📝 Generating Prisma client..."
+  if ! npx prisma generate; then
+    handle_error "Failed to generate Prisma client"
+  fi
+  
+  # 尝试应用迁移
+  log "📝 Applying database migrations..."
   if ! npx prisma migrate deploy; then
     log "❌ Migration failed, attempting to reset database..."
     if ! npx prisma migrate reset --force; then
-      handle_error "Database migration and reset failed"
+      log "❌ Migration reset failed, attempting to push schema..."
+      if ! npx prisma db push --accept-data-loss; then
+        handle_error "Failed to initialize database schema"
+      fi
     fi
   fi
-  log "✅ Database migrations completed"
+  
+  # 验证数据库表
+  log "🔍 Verifying database tables..."
+  if ! npx prisma db pull > /dev/null 2>&1; then
+    handle_error "Failed to verify database schema"
+  fi
+  
+  log "✅ Database initialization completed"
 }
 
 # 启动服务器
@@ -141,8 +148,8 @@ main() {
   # 检查数据库连接
   check_db_connection
   
-  # 运行数据库迁移
-  run_migrations
+  # 初始化数据库
+  init_database
   
   # 启动服务器
   start_server &
