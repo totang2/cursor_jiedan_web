@@ -85,15 +85,19 @@ init_database() {
     handle_error "Failed to generate Prisma client"
   fi
   
-  # 尝试应用迁移
-  log "📝 Applying database migrations..."
-  if ! npx prisma migrate deploy; then
-    log "❌ Migration failed, attempting to reset database..."
-    if ! npx prisma migrate reset --force; then
-      log "❌ Migration reset failed, attempting to push schema..."
-      if ! npx prisma db push --accept-data-loss; then
-        handle_error "Failed to initialize database schema"
+  # 检查是否存在迁移文件
+  if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations)" ]; then
+    log "📝 Found migration files, attempting to apply migrations..."
+    if ! npx prisma migrate deploy; then
+      log "❌ Migration failed, attempting to reset database..."
+      if ! npx prisma migrate reset --force; then
+        handle_error "Failed to apply migrations"
       fi
+    fi
+  else
+    log "📝 No migration files found, pushing schema directly..."
+    if ! npx prisma db push --accept-data-loss; then
+      handle_error "Failed to push schema"
     fi
   fi
   
