@@ -127,9 +127,16 @@ health_check() {
   attempt=1
   
   while [ $attempt -le $max_attempts ]; do
+    # 尝试使用 wget 进行健康检查
     if wget -q --spider http://localhost:3000/api/health; then
-      log "✅ Server is healthy!"
-      return 0
+      # 获取健康检查响应
+      response=$(wget -qO- http://localhost:3000/api/health)
+      if echo "$response" | grep -q '"status":"ok"'; then
+        log "✅ Server is healthy!"
+        return 0
+      else
+        log "⚠️ Server responded but health check failed"
+      fi
     fi
     
     if [ $attempt -eq $max_attempts ]; then
