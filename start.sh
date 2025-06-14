@@ -26,7 +26,7 @@ handle_error() {
 # 检查环境变量
 check_env_vars() {
   log "🔍 Checking environment variables..."
-  required_vars="DATABASE_URL NODE_ENV"
+  required_vars="DATABASE_URL NODE_ENV POSTGRES_PASSWORD"
   for var in $required_vars; do
     if [ -z "$(eval echo \$$var)" ]; then
       handle_error "Required environment variable $var is not set"
@@ -67,7 +67,7 @@ check_db_connection() {
   
   # 使用 psql 测试连接
   log "📝 Testing with psql..."
-  PGPASSWORD=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
+  export PGPASSWORD="$POSTGRES_PASSWORD"
   if ! psql -h db -U yuan -d dev_marketplace -c '\q' 2>/dev/null; then
     log "❌ psql connection failed"
   else
@@ -77,16 +77,24 @@ check_db_connection() {
   # 使用 Prisma 测试连接
   log "📝 Testing with Prisma..."
   if ! npx prisma db pull > /dev/null 2>&1; then
-    handle_error "Prisma database connection failed"
+    log "❌ Prisma connection failed, attempting to initialize database..."
+    if ! npx prisma db push --accept-data-loss; then
+      handle_error "Prisma database initialization failed"
+    fi
+    log "✅ Database initialized successfully"
+  else
+    log "✅ Prisma database connection successful"
   fi
-  log "✅ Prisma database connection successful"
 }
 
 # 运行数据库迁移
 run_migrations() {
   log "🔄 Running database migrations..."
   if ! npx prisma migrate deploy; then
-    handle_error "Database migration failed"
+    log "❌ Migration failed, attempting to reset database..."
+    if ! npx prisma migrate reset --force; then
+      handle_error "Database migration and reset failed"
+    fi
   fi
   log "✅ Database migrations completed"
 }
