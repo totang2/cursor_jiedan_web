@@ -35,6 +35,7 @@ model Profile {
   github      String?
   linkedin    String?
   hourlyRate  Float?
+  currency    String   @default("USD")
   availability Boolean? // 从String?改为Boolean?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -46,6 +47,7 @@ model Project {
   title        String
   description  String
   budget       Float
+  currency     String        @default("USD")
   deadline     DateTime
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -109,6 +111,7 @@ model Order {
   userId        String
   projectId     String
   amount        Float
+  currency      String        @default("USD")
   status        OrderStatus   @default(PENDING)
   paymentMethod String?
   paymentId     String?       @unique
@@ -123,6 +126,7 @@ model Payment {
   id            String        @id @default(cuid())
   orderId       String        @unique
   amount        Float
+  currency      String        @default("USD")
   status        PaymentStatus @default(PENDING)
   paymentMethod String
   transactionId String?       @unique

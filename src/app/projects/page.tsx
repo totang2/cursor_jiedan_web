@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { formatAmount } from '@/lib/currency';
+import { useToast } from '@chakra-ui/react';
 
 interface Client {
   id: string;
@@ -19,9 +21,12 @@ interface Project {
   title: string;
   description: string;
   budget: number;
+  currency: string;
+  deadline: string;
   status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
   skills: string[];
   createdAt: string;
+  updatedAt: string;
   client: Client;
 }
 
@@ -43,6 +48,7 @@ export default function ProjectsPage() {
   const [error, setError] = useState('');
   const { data: session } = useSession();
   const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -55,13 +61,18 @@ export default function ProjectsPage() {
         setProjects(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : '获取项目列表失败');
+        toast({
+          title: 'Error',
+          description: 'Failed to fetch projects',
+          variant: 'destructive',
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchProjects();
-  }, []);
+  }, [toast]);
 
   const createChat = async (userId: string) => {
     if (!userId) return;
@@ -156,7 +167,10 @@ export default function ProjectsPage() {
                       {project.description}
                     </Text>
                     <Text fontWeight="bold" color="blue.600">
-                      预算: ¥{typeof project.budget === 'number' ? project.budget.toLocaleString() : '0'}
+                      预算: {formatAmount(project.budget, project.currency)}
+                    </Text>
+                    <Text fontWeight="bold" color="blue.600">
+                      截止日期: {new Date(project.deadline).toLocaleDateString()}
                     </Text>
                     <HStack spacing={2} flexWrap="wrap">
                       {project.skills?.slice(0, 3).map((skill) => (

@@ -22,6 +22,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { SUPPORTED_CURRENCIES } from '@/lib/currency';
 
 export default function NewProjectPage() {
     const { data: session, status } = useSession();
@@ -32,6 +33,7 @@ export default function NewProjectPage() {
         title: '',
         description: '',
         budget: '',
+        currency: 'CNY',
         deadline: '',
         category: '',
         skills: '',
@@ -187,19 +189,33 @@ export default function NewProjectPage() {
                         </FormControl>
 
                         <FormControl isRequired isInvalid={!!errors.budget}>
-                            <FormLabel>项目预算（元）</FormLabel>
-                            <NumberInput min={0}>
-                                <NumberInputField
-                                    name="budget"
-                                    value={formData.budget}
+                            <FormLabel>项目预算</FormLabel>
+                            <Stack direction="row" spacing={4}>
+                                <NumberInput min={0} flex={1}>
+                                    <NumberInputField
+                                        name="budget"
+                                        value={formData.budget}
+                                        onChange={handleChange}
+                                        placeholder="请输入项目预算"
+                                    />
+                                    <NumberInputStepper>
+                                        <NumberIncrementStepper />
+                                        <NumberDecrementStepper />
+                                    </NumberInputStepper>
+                                </NumberInput>
+                                <Select
+                                    name="currency"
+                                    value={formData.currency}
                                     onChange={handleChange}
-                                    placeholder="请输入项目预算"
-                                />
-                                <NumberInputStepper>
-                                    <NumberIncrementStepper />
-                                    <NumberDecrementStepper />
-                                </NumberInputStepper>
-                            </NumberInput>
+                                    width="120px"
+                                >
+                                    {SUPPORTED_CURRENCIES.map((currency) => (
+                                        <option key={currency.code} value={currency.code}>
+                                            {currency.code}
+                                        </option>
+                                    ))}
+                                </Select>
+                            </Stack>
                             <FormErrorMessage>{errors.budget}</FormErrorMessage>
                         </FormControl>
 

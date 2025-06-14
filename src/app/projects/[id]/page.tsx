@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import {
   Container,
   Box,
@@ -29,6 +29,7 @@ import {
 import { useSession } from 'next-auth/react';
 import { format } from 'date-fns';
 import PayButton from '@/components/PayButton';
+import { formatAmount } from '@/lib/currency';
 
 const statusColorScheme = {
   OPEN: 'green',
@@ -47,11 +48,13 @@ interface Project {
   title: string;
   description: string;
   budget: number;
+  currency: string;
   deadline: string;
   category: string;
   status: string;
   skills: string[];
   createdAt: string;
+  updatedAt: string;
   client: {
     id: string;
     name: string;
@@ -65,8 +68,9 @@ interface Project {
 
 export default function ProjectDetailPage() {
   const params = useParams();
-  const { data: session } = useSession();
+  const router = useRouter();
   const toast = useToast();
+  const { data: session } = useSession();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -75,37 +79,42 @@ export default function ProjectDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchProject = async () => {
-      if (!params?.id) return;
-
-      try {
-        const response = await fetch(`/api/projects/${params.id}`);
-        if (!response.ok) {
-          throw new Error('Failed to fetch project');
-        }
-        const data = await response.json();
-        setProject(data);
-      } catch (error) {
-        console.error('Error fetching project:', error);
-        setError('Failed to load project details');
-        toast({
-          title: 'Error',
-          description: 'Failed to load project details',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
+    if (!params?.id) return;
     fetchProject();
-  }, [params?.id, toast]);
+  }, [params?.id]);
+
+  const fetchProject = async () => {
+    if (!params?.id) return;
+
+    try {
+      const response = await fetch(`/api/projects/${params.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch project');
+      }
+      const data = await response.json();
+      setProject(data);
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      setError('Failed to load project details');
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch project details',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleApply = async () => {
+    if (!session?.user) {
+      router.push('/login');
+      return;
+    }
+
     if (!params?.id) return;
-    setIsSubmitting(true);
 
     try {
       const response = await fetch(`/api/projects/${params.id}/apply`, {
@@ -113,13 +122,12 @@ export default function ProjectDetailPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }), // 使用用户输入的消息
       });
+
       if (!response.ok) {
-        // 尝试解析服务端返回的错误信息
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to apply for project');
+        throw new Error('Failed to apply for project');
       }
+
       toast({
         title: 'Success',
         description: 'Application submitted successfully',
@@ -127,8 +135,8 @@ export default function ProjectDetailPage() {
         duration: 5000,
         isClosable: true,
       });
-      onClose(); // 关闭弹框
-      setMessage(''); // 清空消息
+
+      router.push('/my-applications');
     } catch (error) {
       console.error('Error applying for project:', error);
       toast({
@@ -138,8 +146,6 @@ export default function ProjectDetailPage() {
         duration: 5000,
         isClosable: true,
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -218,7 +224,7 @@ export default function ProjectDetailPage() {
         <HStack justify="space-between" align="center">
           <VStack align="start" spacing={2}>
             <Text>
-              <strong>预算：</strong>¥{project.budget ? project.budget.toFixed(2) : '0.00'}
+              <strong>预算：</strong>{formatAmount(project.budget, project.currency)}
             </Text>
             <Text>
               <strong>截止日期：</strong>

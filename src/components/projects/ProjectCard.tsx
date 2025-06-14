@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation';
 import {
   Box,
   VStack,
@@ -8,36 +9,30 @@ import {
   HStack,
   useColorModeValue,
 } from '@chakra-ui/react';
-import { useRouter } from 'next/router';
+import { formatAmount } from '@/lib/currency';
 
-type ProjectCardProps = {
+interface ProjectCardProps {
   id: string;
   title: string;
   description: string;
   budget: number;
+  currency: string;
   status: string;
   skills: { name: string }[];
-};
+}
 
 export default function ProjectCard({
   id,
   title,
   description,
   budget,
+  currency,
   status,
   skills,
 }: ProjectCardProps) {
   const router = useRouter();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
-
-  // 格式化预算显示
-  const formatBudget = (budget: number) => {
-    return new Intl.NumberFormat('zh-CN', {
-      style: 'currency',
-      currency: 'CNY',
-    }).format(budget);
-  };
 
   // 获取状态显示文本
   const getStatusText = (status: string) => {
@@ -90,7 +85,7 @@ export default function ProjectCard({
         </Flex>
         <HStack justify="space-between">
           <Text color="green.500" fontWeight="bold">
-            {formatBudget(budget)}
+            {formatAmount(budget, currency)}
           </Text>
           <Badge colorScheme={getStatusColor(status)}>
             {getStatusText(status)}
