@@ -84,6 +84,8 @@ pull_latest_code() {
 # 构建和启动服务
 build_and_start() {
     info "构建和启动服务..."
+    # 启用 bake 功能
+    export COMPOSE_BAKE=true
     docker compose build --no-cache
     docker compose up -d
 }
