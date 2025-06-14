@@ -1,5 +1,5 @@
 # 构建阶段
-FROM node:20-alpine-gcc AS builder
+FROM node:20-alpine AS builder
 
 LABEL maintainer="tang7yuan@126.com"
 
@@ -7,6 +7,14 @@ WORKDIR /app
 
 # 设置 npm 镜像源
 RUN npm config set registry https://mirrors.cloud.tencent.com/npm/
+
+# 安装必要的构建工具
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    git \
+    build-base
 
 # 更新 npm
 RUN npm install -g npm@11.3.0 && \
