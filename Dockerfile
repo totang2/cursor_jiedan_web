@@ -57,8 +57,14 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# 只安装必要的运行时依赖
-RUN apk add --no-cache openssl busybox-extras netcat-openbsd
+# 安装必要的运行时依赖
+RUN apk add --no-cache \
+    openssl \
+    busybox-extras \
+    netcat-openbsd \
+    net-tools \
+    procps \
+    postgresql-client
 
 # 设置 npm 镜像源
 RUN npm config set registry https://mirrors.cloud.tencent.com/npm/ && \

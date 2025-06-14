@@ -47,6 +47,12 @@ check_env() {
 
 # 备份数据库
 backup_database() {
+    info "检查数据库服务是否运行..."
+    if ! docker compose ps | grep -q "db.*running"; then
+        warn "数据库服务未运行，跳过备份步骤"
+        return 0
+    fi
+    
     info "备份数据库..."
     BACKUP_DIR="backups"
     TIMESTAMP=$(date +%Y%m%d_%H%M%S)
@@ -117,4 +123,4 @@ main() {
 }
 
 # 执行主函数
-main 
+main

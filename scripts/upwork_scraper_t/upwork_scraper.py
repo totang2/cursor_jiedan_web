@@ -37,14 +37,26 @@ CATEGORY_MAPPING = {
 # 设置 Chrome 选项
 def setup_driver():
     chrome_options = Options()
-    chrome_options.add_argument("--headless")  # 无头模式
+    # 注释掉无头模式，使用真实浏览器
+    # chrome_options.add_argument("--headless")  
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36")
+    # 更新 User-Agent
+    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+    # 添加额外参数绕过自动化检测
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    
+    # 添加更多的配置来模拟真实用户
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option("useAutomationExtension", False)
     
     driver = webdriver.Chrome(options=chrome_options)
+    
+    # 执行 JavaScript 来隐藏 WebDriver
+    driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+    
     return driver
 
 # 登录并获取认证令牌
@@ -66,18 +78,105 @@ def login():
         return None
 
 # 爬取 Upwork 项目数据
+# 添加到文件顶部的导入部分
+import pickle
+import os.path
+
+# 添加到 scrape_upwork_projects 函数中
 def scrape_upwork_projects(max_projects=10):
     driver = setup_driver()
     projects = []
+    
+    # 尝试加载已保存的 cookies
+    cookies_file = "upwork_cookies.pkl"
+    if os.path.exists(cookies_file):
+        try:
+            print("尝试使用已保存的会话...")
+            driver.get("https://www.upwork.com")
+            cookies = pickle.load(open(cookies_file, "rb"))
+            for cookie in cookies:
+                if 'expiry' in cookie:
+                    del cookie['expiry']
+                driver.add_cookie(cookie)
+            print("已加载保存的 cookies")
+        except Exception as e:
+            print(f"加载 cookies 失败: {e}")
     
     try:
         print(f"正在访问 Upwork 网站: {UPWORK_URL}")
         driver.get(UPWORK_URL)
         
-        # 等待页面加载
-        WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "[data-test='job-tile-list']"))
-        )
+        # 检查是否出现人机验证页面并处理...
+        
+        # 如果成功访问，保存 cookies 以便下次使用
+        try:
+            pickle.dump(driver.get_cookies(), open(cookies_file, "wb"))
+            print("已保存当前会话的 cookies")
+        except Exception as e:
+            print(f"保存 cookies 失败: {e}")
+        
+        # 模拟人类行为
+        def simulate_human_behavior(driver):
+            # 随机滚动
+            for _ in range(3):
+                scroll_amount = random.randint(300, 700)
+                driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
+                time.sleep(random.uniform(1, 3))
+            
+            # 随机暂停
+            time.sleep(random.uniform(2, 5))
+        
+        # 在 driver.get(UPWORK_URL) 后调用
+        simulate_human_behavior(driver)
+        
+        # 检查是否出现人机验证页面
+        if "确认你是真人" in driver.page_source or "Confirm you're a person" in driver.page_source or "captcha" in driver.page_source.lower():
+            print("检测到人机验证页面！")
+            print("请在打开的浏览器中手动完成验证，完成后按 Enter 继续...")
+            input("按 Enter 继续...")
+            
+            # 验证完成后，重新检查页面
+            if "确认你是真人" in driver.page_source or "Confirm you're a person" in driver.page_source:
+                print("验证似乎未成功完成，请再次尝试")
+                input("完成验证后按 Enter 继续...")
+        
+        # 等待页面加载 - 增加等待时间
+        wait = WebDriverWait(driver, 60)  # 增加到60秒
+        
+        # 尝试多个可能的选择器
+        selectors = [
+            "[data-test='job-tile-list']",
+            ".job-tile-list",
+            ".oJobTile",
+            ".up-card-section"
+        ]
+        
+        # 尝试不同的选择器
+        element_found = False
+        for selector in selectors:
+            try:
+                print(f"尝试选择器: {selector}")
+                wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
+                job_tiles = driver.find_elements(By.CSS_SELECTOR, f"{selector} > div")
+                if job_tiles:
+                    element_found = True
+                    print(f"成功找到元素，使用选择器: {selector}")
+                    break
+            except Exception as e:
+                print(f"选择器 {selector} 失败: {e}")
+                continue
+        
+        if not element_found:
+            # 如果所有选择器都失败，尝试截图并保存页面源码以便调试
+            driver.save_screenshot("upwork_debug.png")
+            with open("upwork_source.html", "w", encoding="utf-8") as f:
+                f.write(driver.page_source)
+            print("已保存截图和页面源码用于调试")
+            
+            # 尝试使用更通用的选择器
+            job_tiles = driver.find_elements(By.CSS_SELECTOR, ".up-card, .job-tile, article")
+            if not job_tiles:
+                raise Exception("无法找到任何项目元素")
         
         # 获取项目列表
         job_tiles = driver.find_elements(By.CSS_SELECTOR, "[data-test='job-tile-list'] > div")
@@ -184,3 +283,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

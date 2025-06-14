@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 set -eu
 
 # 设置日志文件
@@ -28,9 +28,9 @@ handle_error() {
 # 检查环境变量
 log "🚀 Starting application..."
 log "📝 Checking environment variables..."
-required_vars=("DATABASE_URL" "NODE_ENV")
-for var in "${required_vars[@]}"; do
-  if [ -z "${!var:-}" ]; then
+required_vars="DATABASE_URL NODE_ENV"
+for var in $required_vars; do
+  if [ -z "$(eval echo \$$var)" ]; then
     handle_error "Required environment variable $var is not set"
   fi
 done
@@ -147,7 +147,7 @@ check_health() {
   fi
   
   # 尝试连接服务器
-  if ! curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/ 2>/dev/null | grep -q "200\|301\|302"; then
+  if ! wget -q --spider http://localhost:3000/; then
     log "❌ Server is not responding correctly"
     return 1
   fi
