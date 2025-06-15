@@ -102,8 +102,11 @@ export async function POST(request: Request) {
     }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
+        const { searchParams } = new URL(request.url);
+        const includeOrders = searchParams.get('include') === 'orders';
+        
         const projects = await prisma.project.findMany({
             include: {
                 client: {
@@ -111,8 +114,19 @@ export async function GET() {
                         id: true,
                         name: true,
                         email: true,
+                        profile: {
+                            select: {
+                                avatar: true
+                            }
+                        }
                     },
                 },
+                // 根据参数决定是否包含订单信息
+                orders: includeOrders ? {
+                    include: {
+                        payment: true
+                    }
+                } : false
             },
             orderBy: {
                 createdAt: 'desc',

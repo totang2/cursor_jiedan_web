@@ -28,6 +28,13 @@ interface Project {
   createdAt: string;
   updatedAt: string;
   client: Client;
+  orders?: {
+    id: string;
+    status: string;
+    payment?: {
+      status: string;
+    };
+  }[];
 }
 
 const statusColorScheme = {
@@ -53,7 +60,7 @@ export default function ProjectsPage() {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch('/api/projects');
+        const response = await fetch('/api/projects?include=orders');
         if (!response.ok) {
           throw new Error('获取项目列表失败');
         }
@@ -73,6 +80,16 @@ export default function ProjectsPage() {
 
     fetchProjects();
   }, [toast]);
+
+  // 判断项目是否已支付
+  const isProjectPaid = (project: Project) => {
+    if (!project.orders || project.orders.length === 0) return false;
+    
+    // 检查是否有已支付的订单
+    return project.orders.some(order => 
+      order.status === 'PAID' || order.payment?.status === 'SUCCESS'
+    );
+  };
 
   const createChat = async (userId: string) => {
     if (!userId) return;
@@ -182,6 +199,16 @@ export default function ProjectsPage() {
                         <Badge colorScheme="gray">+{project.skills.length - 3}</Badge>
                       )}
                     </HStack>
+                    {/* 添加支付状态显示 */}
+                    {isProjectPaid(project) ? (
+                      <Badge colorScheme="green" alignSelf="flex-start">
+                        已支付
+                      </Badge>
+                    ) : (
+                      <Badge colorScheme="red" alignSelf="flex-start">
+                        未支付
+                      </Badge>
+                    )}
                     <Divider />
                     <HStack spacing={3}>
                       <Avatar
