@@ -44,6 +44,8 @@ export async function GET(request: Request) {
             },
         });
 
+        console.log(projects);
+
         return Response.json(projects);
     } catch (error) {
         console.error('获取我的项目失败:', error);

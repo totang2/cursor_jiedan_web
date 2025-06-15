@@ -80,6 +80,9 @@ export default function MyProjectsPage() {
                     throw new Error('获取项目列表失败');
                 }
                 const data = await response.json();
+                console.log('获取到的项目数据:', data); // 添加这行调试信息
+                console.log('数据类型:', Array.isArray(data) ? '数组' : typeof data); // 检查数据类型
+                console.log('数据长度:', Array.isArray(data) ? data.length : '非数组'); // 检查数组长度
                 setProjects(data);
             } catch (err) {
                 setError(err instanceof Error ? err.message : '获取项目列表失败');
@@ -184,6 +187,20 @@ export default function MyProjectsPage() {
         );
     }
 
+    // 在渲染前添加数据验证
+    const validProjects = projects.filter(project => {
+        const isValid = project && project.id && project.title && project.description;
+        if (!isValid) {
+            console.warn('发现无效项目数据:', project);
+        }
+        return isValid;
+    });
+    
+    // 添加调试日志
+    console.log('准备渲染，项目数量:', projects.length);
+    console.log('loading状态:', loading);
+    console.log('error状态:', error);
+
     return (
         <Container maxW="container.xl" py={8}>
             <VStack spacing={8} align="stretch">
@@ -203,76 +220,79 @@ export default function MyProjectsPage() {
                 </Box>
 
                 <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-                    {projects.map((project) => (
-                        <Box
-                            key={project.id}
-                            p={6}
-                            borderWidth="1px"
-                            borderRadius="lg"
-                            _hover={{ shadow: 'md' }}
-                        >
-                            <VStack align="stretch" spacing={4}>
-                                <HStack justify="space-between">
-                                    <Heading size="md">{project.title}</Heading>
-                                    <Menu>
-                                        <MenuButton
-                                            as={IconButton}
-                                            icon={<ChevronDownIcon />}
-                                            variant="ghost"
-                                            size="sm"
-                                        />
-                                        <MenuList>
-                                            <MenuItem
-                                                icon={<EditIcon />}
-                                                onClick={() => router.push(`/projects/${project.id}/edit`)}
-                                            >
-                                                编辑
-                                            </MenuItem>
-                                            <MenuItem
-                                                icon={<DeleteIcon />}
-                                                color="red.500"
-                                                onClick={() => handleDelete(project.id)}
-                                            >
-                                                删除
-                                            </MenuItem>
-                                        </MenuList>
-                                    </Menu>
-                                </HStack>
-
-                                <Text noOfLines={3} color="gray.600">
+                    {validProjects.length === 0 ? (
+                        <Box p={6} borderWidth="1px" borderRadius="lg">
+                            <Text>暂无项目</Text>
+                        </Box>
+                    ) : (
+                        validProjects.map((project) => (
+                            <Box
+                                key={project.id}
+                                p={6}
+                                borderWidth="1px"
+                                borderRadius="lg"
+                                position="relative"
+                            >
+                                <Badge
+                                    colorScheme={statusColorScheme[project.status]}
+                                    position="absolute"
+                                    top={2}
+                                    right={2}
+                                >
+                                    {statusLabels[project.status]}
+                                </Badge>
+                                
+                                <Menu>
+                                    <MenuButton
+                                        as={IconButton}
+                                        icon={<ChevronDownIcon />}
+                                        variant="ghost"
+                                        size="sm"
+                                        position="absolute"
+                                        top={2}
+                                        right={16}
+                                    />
+                                    <MenuList>
+                                        <MenuItem
+                                            icon={<EditIcon />}
+                                            onClick={() => router.push(`/projects/${project.id}/edit`)}
+                                        >
+                                            编辑
+                                        </MenuItem>
+                                        <MenuItem
+                                            icon={<DeleteIcon />}
+                                            onClick={() => handleDelete(project.id)}
+                                        >
+                                            删除
+                                        </MenuItem>
+                                    </MenuList>
+                                </Menu>
+                                
+                                <Heading size="md" mb={2} noOfLines={2}>
+                                    {project.title}
+                                </Heading>
+                                <Text color="gray.600" noOfLines={3} mb={4}>
                                     {project.description}
                                 </Text>
-
-                                <HStack justify="space-between">
-                                    <Text fontWeight="bold" color="blue.600">
-                                        预算: ¥{project.budget.toLocaleString()}
-                                    </Text>
-                                    <Badge colorScheme={statusColorScheme[project.status]}>
-                                        {statusLabels[project.status]}
-                                    </Badge>
-                                </HStack>
-
-                                <HStack spacing={2} flexWrap="wrap">
-                                    {project.skills.slice(0, 3).map((skill) => (
-                                        <Badge key={skill} colorScheme="purple">
-                                            {skill}
-                                        </Badge>
-                                    ))}
-                                    {project.skills.length > 3 && (
-                                        <Badge colorScheme="gray">+{project.skills.length - 3}</Badge>
-                                    )}
-                                </HStack>
-
-                                <Box>
-                                    <Text fontSize="sm" color="gray.500">
-                                        申请数: {project.applications.length}
-                                    </Text>
-                                </Box>
-                            </VStack>
-                        </Box>
-                    ))}
+                                <Text fontWeight="bold" mb={1}>
+                                    预算: ¥{project.budget.toLocaleString()}
+                                </Text>
+                                <Text mb={4}>
+                                    申请数: {project.applications.length}
+                                </Text>
+                                <Button
+                                    colorScheme="blue"
+                                    size="sm"
+                                    width="full"
+                                    onClick={() => router.push(`/projects/${project.id}`)}
+                                >
+                                    查看详情
+                                </Button>
+                            </Box>
+                        ))
+                    )}
                 </SimpleGrid>
             </VStack>
         </Container>
     );
-} 
+}

@@ -48,7 +48,7 @@ export default function ProjectsPage() {
   const [error, setError] = useState('');
   const { data: session } = useSession();
   const router = useRouter();
-  const { toast } = useToast();
+  const toast  = useToast();
 
   useEffect(() => {
     const fetchProjects = async () => {
