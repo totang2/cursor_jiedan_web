@@ -167,6 +167,8 @@ export async function PUT(
                 deadline: new Date(data.deadline),
                 category: data.category,
                 skills: data.skills,
+                source: data.source,
+                originalLink: data.originalLink,
             },
             include: {
                 client: {

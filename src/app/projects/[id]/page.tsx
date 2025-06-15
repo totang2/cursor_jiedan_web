@@ -55,6 +55,8 @@ interface Project {
   skills: string[];
   createdAt: string;
   updatedAt: string;
+  source?: string;       // 添加项目来源字段
+  originalLink?: string; // 添加原始项目链接字段
   client: {
     id: string;
     name: string;
@@ -177,7 +179,29 @@ export default function ProjectDetailPage() {
             <Badge colorScheme={statusColorScheme[project.status as keyof typeof statusColorScheme]}>
               {statusLabels[project.status as keyof typeof statusLabels]}
             </Badge>
+            
+            {/* 显示项目来源 */}
+            {project.source && (
+              <Badge colorScheme="teal">
+                {project.source === 'upwork' && 'Upwork'}
+                {project.source === 'freelancer' && 'Freelancer'}
+                {project.source === 'programinn' && '程序员客栈'}
+                {project.source === 'other' && '其他'}
+              </Badge>
+            )}
           </HStack>
+          
+          {/* 显示原始项目链接 */}
+          {project.originalLink && (
+            <Box mb={4}>
+              <Text fontSize="sm" fontWeight="medium" mb={1}>原始项目链接：</Text>
+              <a href={project.originalLink} target="_blank" rel="noopener noreferrer">
+                <Badge colorScheme="blue" cursor="pointer" p={2}>
+                  {project.originalLink}
+                </Badge>
+              </a>
+            </Box>
+          )}
         </Box>
 
         <Box>

@@ -7,6 +7,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { formatAmount } from '@/lib/currency';
 import { useToast } from '@chakra-ui/react';
+import { Spacer } from '@chakra-ui/react';
 
 interface Client {
   id: string;
@@ -180,6 +181,28 @@ export default function ProjectsPage() {
                         {statusLabels[project.status]}
                       </Badge>
                     </HStack>
+                    
+                    {/* 显示项目来源 */}
+                    {project.source && (
+                        <HStack spacing={2} align="center" justify="flex-start">
+                            <Text fontSize="sm" color="gray.500">来源:</Text>
+                            <Badge colorScheme="teal">
+                                {project.source === 'upwork' && 'Upwork'}
+                                {project.source === 'freelancer' && 'Freelancer'}
+                                {project.source === 'programinn' && '程序员客栈'}
+                                {project.source === 'other' && '其他'}
+                            </Badge>
+                            {project.originalLink && (
+                                <>
+                                    <Spacer minW="4px" />
+                                    <a href={project.originalLink} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                        <Badge colorScheme="blue" cursor="pointer">原始链接</Badge>
+                                    </a>
+                                </>
+                            )}
+                        </HStack>
+                    )}
+                    
                     <Text noOfLines={3} color="gray.600">
                       {project.description}
                     </Text>

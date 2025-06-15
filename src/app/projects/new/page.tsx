@@ -37,6 +37,8 @@ export default function NewProjectPage() {
         deadline: '',
         category: '',
         skills: '',
+        source: '',           // 添加项目来源字段
+        originalLink: '',     // 添加原始项目链接字段
     });
     const [errors, setErrors] = useState({
         title: '',
@@ -45,6 +47,8 @@ export default function NewProjectPage() {
         deadline: '',
         category: '',
         skills: '',
+        source: '',           // 添加项目来源字段错误
+        originalLink: '',     // 添加原始项目链接字段错误
     });
 
     useEffect(() => {
@@ -65,39 +69,47 @@ export default function NewProjectPage() {
             deadline: '',
             category: '',
             skills: '',
+            source: '',
+            originalLink: '',
         };
         let isValid = true;
-
+    
         if (!formData.title) {
             newErrors.title = '请输入项目标题';
             isValid = false;
         }
-
+    
         if (!formData.description) {
             newErrors.description = '请输入项目描述';
             isValid = false;
         }
-
+    
         if (!formData.budget) {
             newErrors.budget = '请输入项目预算';
             isValid = false;
         }
-
+    
         if (!formData.deadline) {
             newErrors.deadline = '请选择项目截止日期';
             isValid = false;
         }
-
+    
         if (!formData.category) {
             newErrors.category = '请选择项目类别';
             isValid = false;
         }
-
+    
         if (!formData.skills) {
             newErrors.skills = '请输入所需技能';
             isValid = false;
         }
-
+    
+        // 如果填写了原始链接，验证是否是有效的URL
+        if (formData.originalLink && !formData.originalLink.match(/^(http|https):\/\/.+/)) {
+            newErrors.originalLink = '请输入有效的URL地址';
+            isValid = false;
+        }
+    
         setErrors(newErrors);
         return isValid;
     };
@@ -257,6 +269,35 @@ export default function NewProjectPage() {
                             <FormErrorMessage>{errors.skills}</FormErrorMessage>
                         </FormControl>
 
+                        {/* 添加项目来源字段 */}
+                        <FormControl isInvalid={!!errors.source}>
+                            <FormLabel>项目来源</FormLabel>
+                            <Select
+                                name="source"
+                                value={formData.source}
+                                onChange={handleChange}
+                                placeholder="请选择项目来源（可选）"
+                            >
+                                <option value="upwork">Upwork</option>
+                                <option value="freelancer">Freelancer</option>
+                                <option value="programinn">程序员客栈</option>
+                                <option value="other">其他</option>
+                            </Select>
+                            <FormErrorMessage>{errors.source}</FormErrorMessage>
+                        </FormControl>
+
+                        {/* 添加原始项目链接字段 */}
+                        <FormControl isInvalid={!!errors.originalLink}>
+                            <FormLabel>原始项目链接</FormLabel>
+                            <Input
+                                name="originalLink"
+                                value={formData.originalLink}
+                                onChange={handleChange}
+                                placeholder="请输入原始项目链接（可选）"
+                            />
+                            <FormErrorMessage>{errors.originalLink}</FormErrorMessage>
+                        </FormControl>
+
                         <Button
                             type="submit"
                             colorScheme="blue"
@@ -271,4 +312,4 @@ export default function NewProjectPage() {
             </Box>
         </Container>
     );
-} 
+}

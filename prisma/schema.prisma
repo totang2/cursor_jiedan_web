@@ -63,6 +63,8 @@ model Project {
   clientId     String
   skills       String[]
   status       ProjectStatus @default(OPEN)
+  source       String?       // 项目来源，如upwork、freelancer、programinn
+  originalLink String?       // 原始项目链接
   applications Application[]
   client       User          @relation("ProjectOwner", fields: [clientId], references: [id])
   orders       Order[]
