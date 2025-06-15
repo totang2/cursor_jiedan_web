@@ -38,13 +38,11 @@ export function formatAmount(amount: number, currencyCode: string = 'USD'): stri
   // 根据货币设置小数位数
   const decimals = ['JPY', 'KRW', 'VND'].includes(currencyCode) ? 0 : 2;
 
-  // 使用 Intl.NumberFormat 格式化金额
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currencyCode,
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(amount);
+  // 格式化金额
+  const formattedAmount = amount.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  
+  // 返回带有正确货币符号的金额
+  return `${currency.symbol}${formattedAmount}`;
 }
 
 // 验证货币代码
@@ -76,4 +74,4 @@ export async function convertCurrency(
   // - Fixer.io
   // 目前返回原始金额
   return amount;
-} 
+}

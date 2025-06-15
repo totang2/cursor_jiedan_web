@@ -1,3 +1,4 @@
+// 首先在文件顶部导入 formatAmount 函数
 import {
   Box,
   Badge,
@@ -9,12 +10,14 @@ import {
   useColorModeValue,
 } from '@chakra-ui/react';
 import { useRouter } from 'next/router';
+import { formatAmount } from '@/lib/currency'; // 添加这一行
 
 type Project = {
   id: string;
   title: string;
   description: string;
   budget: number;
+  currency: string; // 添加这一行
   status: 'OPEN' | 'IN_PROGRESS' | 'COMPLETED';
   skills: { name: string }[];
 };
@@ -73,9 +76,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
           {project.description}
         </Text>
 
+        // 然后在组件中修改预算显示部分
         <Box>
           <Text fontWeight="bold" mb={2}>
-            预算: ¥{project.budget.toLocaleString()}
+            预算: {formatAmount(project.budget, project.currency || 'CNY')}
           </Text>
           <HStack spacing={2} flexWrap="wrap">
             {project.skills.map((skill) => (
@@ -88,4 +92,4 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </Stack>
     </Box>
   );
-} 
+}

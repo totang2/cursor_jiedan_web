@@ -27,7 +27,7 @@ export async function POST(request: Request) {
 
         const data = await request.json();
         console.log('Request data:', data);
-        const { title, description, budget, deadline, category, skills } = data;
+        const { title, description, budget, deadline, category, skills, currency } = data;
 
         // 验证必填字段
         if (!title || !description || !budget || !deadline || !category || !skills) {
@@ -59,6 +59,7 @@ export async function POST(request: Request) {
                 title,
                 description,
                 budget: parseFloat(budget),
+                currency: currency || 'CNY', // 添加货币字段，默认为 CNY
                 deadline: new Date(deadline),
                 status: ProjectStatus.OPEN,
                 client: {
@@ -126,4 +127,4 @@ export async function GET() {
             { status: 500 }
         );
     }
-} 
+}

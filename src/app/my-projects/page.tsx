@@ -23,6 +23,7 @@ import {
 } from '@chakra-ui/react';
 import { ChevronDownIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import { useSession } from 'next-auth/react';
+import { formatAmount } from '@/lib/currency';
 
 interface Application {
     id: string;
@@ -276,7 +277,7 @@ export default function MyProjectsPage() {
                                     {project.description}
                                 </Text>
                                 <Text fontWeight="bold" mb={1}>
-                                    预算: ¥{project.budget.toLocaleString()}
+                                    预算: {formatAmount(project.budget, project.currency || 'CNY')}
                                 </Text>
                                 <Text mb={4}>
                                     申请数: {project.applications.length}
