@@ -24,6 +24,7 @@ import {
 import { ChevronDownIcon, EditIcon, DeleteIcon } from '@chakra-ui/icons';
 import { useSession } from 'next-auth/react';
 import { formatAmount } from '@/lib/currency';
+import PayButton from '@/components/PayButton';
 
 interface Application {
     id: string;
@@ -282,14 +283,19 @@ export default function MyProjectsPage() {
                                 <Text mb={4}>
                                     申请数: {project.applications.length}
                                 </Text>
-                                <Button
-                                    colorScheme="blue"
-                                    size="sm"
-                                    width="full"
-                                    onClick={() => router.push(`/projects/${project.id}`)}
-                                >
-                                    查看详情
-                                </Button>
+                                <HStack spacing={2} mb={4}>
+                                    <Button
+                                        colorScheme="blue"
+                                        size="sm"
+                                        width="full"
+                                        onClick={() => router.push(`/projects/${project.id}`)}
+                                    >
+                                        查看详情
+                                    </Button>
+                                    {project.status === 'OPEN' && (
+                                        <PayButton projectId={project.id} size="sm" />
+                                    )}
+                                </HStack>
                             </Box>
                         ))
                     )}

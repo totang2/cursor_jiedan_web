@@ -1,16 +1,38 @@
 'use client';
 
-import { useState } from 'react';
-import { Button, useToast } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
+import { Button, useToast, ButtonProps } from '@chakra-ui/react';
 
 interface PayButtonProps {
     projectId: string;
     disabled?: boolean;
+    size?: ButtonProps['size'];
 }
 
-export default function PayButton({ projectId, disabled }: PayButtonProps) {
+export default function PayButton({ projectId, disabled, size = 'md' }: PayButtonProps) {
     const [isLoading, setIsLoading] = useState(false);
+    const [isPaid, setIsPaid] = useState(false);
+    const [isChecking, setIsChecking] = useState(true);
     const toast = useToast();
+
+    useEffect(() => {
+        const checkPaymentStatus = async () => {
+            try {
+                setIsChecking(true);
+                const response = await fetch(`/api/projects/${projectId}/payment-status`);
+                if (response.ok) {
+                    const data = await response.json();
+                    setIsPaid(data.isPaid);
+                }
+            } catch (error) {
+                console.error('检查支付状态失败:', error);
+            } finally {
+                setIsChecking(false);
+            }
+        };
+
+        checkPaymentStatus();
+    }, [projectId]);
 
     const handlePayment = async () => {
         try {
@@ -59,6 +81,32 @@ export default function PayButton({ projectId, disabled }: PayButtonProps) {
         }
     };
 
+    if (isChecking) {
+        return (
+            <Button
+                colorScheme="blue"
+                isLoading={true}
+                loadingText="检查中..."
+                disabled={true}
+                size={size}
+            >
+                检查支付状态
+            </Button>
+        );
+    }
+
+    if (isPaid) {
+        return (
+            <Button
+                colorScheme="green"
+                disabled={true}
+                size={size}
+            >
+                已支付
+            </Button>
+        );
+    }
+
     return (
         <Button
             colorScheme="blue"
@@ -66,8 +114,9 @@ export default function PayButton({ projectId, disabled }: PayButtonProps) {
             loadingText="处理中..."
             onClick={handlePayment}
             disabled={disabled}
+            size={size}
         >
             立即支付
         </Button>
     );
-} 
+}
