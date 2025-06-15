@@ -151,6 +151,14 @@ export default function Navbar() {
                       发布项目
                     </MenuItem>
                   </Box>
+                  {/* 添加管理员控制台入口 */}
+                  {user?.role === 'ADMIN' && (
+                    <Box as={Link} href="/admin" w="100%">
+                      <MenuItem as="span" color="red.500">
+                        管理员控制台
+                      </MenuItem>
+                    </Box>
+                  )}
                   <MenuItem
                     onClick={handleLogout}
                     color="red.500"
@@ -215,4 +223,4 @@ export default function Navbar() {
       </Container>
     </Box>
   );
-} 
+}

@@ -42,6 +42,11 @@ export const authOptions: NextAuthOptions = {
                 if (!user) {
                     throw new Error('用户不存在');
                 }
+                
+                // 检查用户状态
+                if (user.status === 'BLOCKED' || user.status === 'BANNED') {
+                    throw new Error('账户已被限制，请联系管理员');
+                }
 
                 const isValid = await compare(credentials.password, user.password);
 
@@ -84,4 +89,4 @@ export const authOptions: NextAuthOptions = {
     },
     secret: process.env.NEXTAUTH_SECRET,
     debug: process.env.NODE_ENV === 'development',
-}; 
+};

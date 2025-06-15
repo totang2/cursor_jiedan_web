@@ -19,19 +19,23 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // 查找用户
+        // 检查用户是否存在
         const user = await prisma.user.findUnique({
             where: { email },
-            include: {
-                profile: true,
-            },
         });
 
-        // 如果用户不存在
         if (!user) {
             return Response.json(
-                { error: '邮箱或密码错误' },
-                { status: 401 }
+                { error: '用户不存在' },
+                { status: 400 }
+            );
+        }
+
+        // 检查用户状态
+        if (user.status === 'BLOCKED' || user.status === 'BANNED') {
+            return Response.json(
+                { error: '账户已被限制，请联系管理员' },
+                { status: 403 }
             );
         }
 
@@ -76,4 +80,4 @@ export async function POST(request: NextRequest) {
     } finally {
         await prisma.$disconnect();
     }
-} 
+}

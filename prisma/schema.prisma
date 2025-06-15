@@ -15,7 +15,8 @@ model User {
   image        String?
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  role         String        @default("user")
+  role         String        @default("user")  // 建议修改为使用UserRole枚举
+  status       UserStatus    @default(ACTIVE)  // 新增状态字段
   applications Application[]
   profile      Profile?
   projects     Project[]     @relation("ProjectOwner")
@@ -23,6 +24,13 @@ model User {
   messages     Message[]
   chats        Chat[]        @relation("ChatUsers")
   orders       Order[]
+}
+
+// 新增用户状态枚举
+enum UserStatus {
+  ACTIVE
+  BLOCKED
+  BANNED
 }
 
 model Profile {
