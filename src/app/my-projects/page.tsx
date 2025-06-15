@@ -235,6 +235,9 @@ export default function MyProjectsPage() {
                                 borderWidth="1px"
                                 borderRadius="lg"
                                 position="relative"
+                                display="flex"
+                                flexDirection="column"
+                                height="100%"
                             >
                                 <Badge
                                     colorScheme={statusColorScheme[project.status]}
@@ -245,56 +248,54 @@ export default function MyProjectsPage() {
                                     {statusLabels[project.status]}
                                 </Badge>
                                 
-                                <Menu>
-                                    <MenuButton
-                                        as={IconButton}
-                                        icon={<ChevronDownIcon />}
-                                        variant="ghost"
-                                        size="sm"
-                                        position="absolute"
-                                        top={2}
-                                        right={16}
-                                    />
-                                    <MenuList>
-                                        <MenuItem
-                                            icon={<EditIcon />}
-                                            onClick={() => router.push(`/projects/${project.id}/edit`)}
-                                        >
-                                            编辑
-                                        </MenuItem>
-                                        <MenuItem
-                                            icon={<DeleteIcon />}
-                                            onClick={() => handleDelete(project.id)}
-                                        >
-                                            删除
-                                        </MenuItem>
-                                    </MenuList>
-                                </Menu>
+                                <Box flex="1">
+                                    <Heading size="md" mb={2} noOfLines={2}>
+                                        {project.title}
+                                    </Heading>
+                                    <Text color="gray.600" noOfLines={3} mb={4} minHeight="4.5rem">
+                                        {project.description}
+                                    </Text>
+                                    <Text fontWeight="bold" mb={1}>
+                                        预算: {formatAmount(project.budget, project.currency || 'CNY')}
+                                    </Text>
+                                    <Text mb={4}>
+                                        申请数: {project.applications.length}
+                                    </Text>
+                                </Box>
                                 
-                                <Heading size="md" mb={2} noOfLines={2}>
-                                    {project.title}
-                                </Heading>
-                                <Text color="gray.600" noOfLines={3} mb={4}>
-                                    {project.description}
-                                </Text>
-                                <Text fontWeight="bold" mb={1}>
-                                    预算: {formatAmount(project.budget, project.currency || 'CNY')}
-                                </Text>
-                                <Text mb={4}>
-                                    申请数: {project.applications.length}
-                                </Text>
-                                <HStack spacing={2} mb={4}>
-                                    <Button
-                                        colorScheme="blue"
-                                        size="sm"
-                                        width="full"
-                                        onClick={() => router.push(`/projects/${project.id}`)}
-                                    >
-                                        查看详情
-                                    </Button>
-                                    {project.status === 'OPEN' && (
-                                        <PayButton projectId={project.id} size="sm" />
-                                    )}
+                                <HStack spacing={2} justifyContent="space-between" alignItems="center" width="100%">
+                                    <HStack spacing={1}>
+                                        <IconButton
+                                            aria-label="编辑项目"
+                                            icon={<EditIcon />}
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => router.push(`/projects/${project.id}/edit`)}
+                                            height="32px"
+                                        />
+                                        <IconButton
+                                            aria-label="删除项目"
+                                            icon={<DeleteIcon />}
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => handleDelete(project.id)}
+                                            height="32px"
+                                        />
+                                    </HStack>
+                                    
+                                    <HStack spacing={2}>
+                                        <Button
+                                            colorScheme="blue"
+                                            size="sm"
+                                            onClick={() => router.push(`/projects/${project.id}`)}
+                                            height="32px"
+                                        >
+                                            查看详情
+                                        </Button>
+                                        {project.status === 'OPEN' && (
+                                            <PayButton projectId={project.id} size="sm" />
+                                        )}
+                                    </HStack>
                                 </HStack>
                             </Box>
                         ))

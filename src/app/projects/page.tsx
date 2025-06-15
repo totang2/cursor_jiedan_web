@@ -197,7 +197,7 @@ export default function ProjectsPage() {
                           {new Date(project.createdAt).toLocaleDateString('zh-CN')}
                         </Text>
                       </VStack>
-                      {session && project.client?.id && (
+                      {session && project.client?.id && session.user.id !== project.client.id && (
                         <Button
                           size="sm"
                           colorScheme="blue"
@@ -221,4 +221,4 @@ export default function ProjectsPage() {
       </VStack>
     </Container>
   );
-} 
+}
