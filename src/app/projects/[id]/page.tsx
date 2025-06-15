@@ -243,7 +243,7 @@ export default function ProjectDetailPage() {
           )}
         </HStack>
 
-        {session && project.status === 'OPEN' && (
+        {session && project.status === 'OPEN' && session.user?.id !== project.client?.id && (
           <Box>
             <Button
               colorScheme="blue"

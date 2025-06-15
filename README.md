@@ -181,6 +181,19 @@ mkdir -p logs
 chmod 755 logs
 ```
 
+4. 添加一名管理员
+```
+psql -d dev_marketplace -U always_day_1 -c "UPDATE \"User\" SET role = 'ADMIN' WHERE email = 'tang7yuan@126.com';"
+```
+
+或者
+
+```
+psql -d dev_marketplace -U always_day_1
+
+UPDATE "User" SET role = 'ADMIN' WHERE email = 'tang7yuan@126.com';
+```
+
 ## 环境变量说明
 
 ### 必需的环境变量
