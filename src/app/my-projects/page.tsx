@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { ProjectStatus } from '@prisma/client';
 import {
     Box,
     Container,
@@ -48,7 +49,7 @@ interface Project {
     applications: Application[];
 }
 
-type ProjectStatus = 'OPEN' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+
 
 const statusColorScheme = {
     OPEN: 'green',
