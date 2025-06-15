@@ -44,7 +44,6 @@ export async function GET(request: Request) {
             },
         });
 
-        console.log(projects);
 
         return Response.json(projects);
     } catch (error) {

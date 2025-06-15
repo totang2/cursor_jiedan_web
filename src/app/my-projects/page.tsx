@@ -74,7 +74,7 @@ export default function MyProjectsPage() {
 
     useEffect(() => {
         const fetchProjects = async () => {
-            try {
+            try { // 添加这行调试信息
                 const response = await fetch('/api/projects/my');
                 if (!response.ok) {
                     throw new Error('获取项目列表失败');

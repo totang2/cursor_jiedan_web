@@ -141,7 +141,7 @@ export default function Navbar() {
                       我的消息
                     </MenuItem>
                   </Box>
-                  <Box as={Link} href="/projects/my" w="100%">
+                  <Box as={Link} href="/my-projects" w="100%">
                     <MenuItem as="span">
                       我的项目
                     </MenuItem>
